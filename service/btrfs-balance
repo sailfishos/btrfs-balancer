@@ -1,0 +1,48 @@
+#!/bin/sh
+
+ROOTDEV=/dev/mmcblk0p28
+
+NEED_BALANCE=0
+# Threshold for percentage of free space allocation to run balance
+BALANCE_THRESHOLD=80
+
+check_balance_need()
+{
+# Check how near we are for full allocation of free space
+	RAWUSE=`btrfs fi show $ROOTDEV | grep $ROOTDEV | \
+			awk -F ' ' '{print $6}'| grep -o '[0-9.]'*`
+	echo rawuse $RAWUSE
+
+	MAXUSE=`btrfs fi show $ROOTDEV | grep $ROOTDEV | \
+			awk -F ' ' '{print $4}'| grep -o '[0-9.]*'`
+	echo maxuse $MAXUSE
+
+	USED=`awk -v rawuse=$RAWUSE -v maxuse=$MAXUSE 'BEGIN {printf "%d\n", \
+			rawuse * 100 / maxuse}'`
+	echo used $USED:
+
+	if test $USED -ge $BALANCE_THRESHOLD; then
+		NEED_BALANCE=1;
+	else
+		NEED_BALANCE=0;
+	fi
+}
+
+
+
+keepalive &
+PID_KEEPALIVE=$!
+
+echo $PID_KEEPALIVE
+
+check_balance_need
+
+echo $NEED_BALANCE
+
+if test $NEED_BALANCE == 1; then
+	btrfs balance start /
+fi
+
+kill $PID_KEEPALIVE
+
+exit 0

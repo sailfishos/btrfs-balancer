@@ -1,0 +1,9 @@
+[Unit]
+Description=Run btrfs balance periodically
+
+[Timer]
+OnCalendar=Tue, 3:00
+Unit=btrfs-balancer.service
+
+[Install]
+WantedBy=multi-user.target
