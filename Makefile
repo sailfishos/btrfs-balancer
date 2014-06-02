@@ -35,12 +35,14 @@ clean:
 	$(RM) *.o $(PROGRAM) *~
 
 install: all
-	install -d $(DESTDIR)$(BINDIR)
-	install $(PROGRAM) $(DESTDIR)$(BINDIR)
-	install -d $(DESTDIR)$(UNITDIR)
-	install -t $(DESTDIR)$(UNITDIR) service/btrfs-balancer.service service/btrfs-balancer.timer
-	install -d $(DESTDIR)$(UNITDIR)/multi-user.target.wants
-	ln -s ../btrfs-balancer.timer $(DESTDIR)$(UNITDIR)/multi-user.target.wants/btrfs-balancer.timer
+	install -d $(DESTDIR)/$(BINDIR)
+	install $(PROGRAM) $(DESTDIR)/$(BINDIR)
+	install -d $(DESTDIR)/$(SBINDIR)
+	install service/btrfs-balance $(DESTDIR)/$(SBINDIR)
+	install -d $(DESTDIR)/$(UNITDIR)
+	install -t $(DESTDIR)/$(UNITDIR) service/btrfs-balancer.service service/btrfs-balancer.timer
+	install -d $(DESTDIR)/$(UNITDIR)/multi-user.target.wants
+	ln -s ../btrfs-balancer.timer $(DESTDIR)/$(UNITDIR)/multi-user.target.wants/btrfs-balancer.timer
 
 
 

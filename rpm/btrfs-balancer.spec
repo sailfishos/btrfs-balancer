@@ -40,6 +40,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 /lib/systemd/system/*
+%{_sbindir}/*
 
 %files -n keepalive
 %defattr(-,root,root,-)
