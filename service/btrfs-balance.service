@@ -4,3 +4,6 @@ Description=btrfs balance service
 [Service]
 Type=simple
 ExecStart=/usr/sbin/btrfs-balance
+
+[Install]
+WantedBy=btrfs-balancer.timer
