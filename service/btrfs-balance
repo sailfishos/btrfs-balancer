@@ -9,11 +9,11 @@ BALANCE_THRESHOLD=80
 check_balance_need()
 {
 # Check how near we are for full allocation of free space
-	RAWUSE=`btrfs fi show $ROOTDEV | grep $ROOTDEV | \
+	RAWUSE=`btrfs fi show | grep $ROOTDEV | \
 			awk -F ' ' '{print $6}'| grep -o '[0-9.]'*`
 	echo rawuse $RAWUSE
 
-	MAXUSE=`btrfs fi show $ROOTDEV | grep $ROOTDEV | \
+	MAXUSE=`btrfs fi show | grep $ROOTDEV | \
 			awk -F ' ' '{print $4}'| grep -o '[0-9.]*'`
 	echo maxuse $MAXUSE
 
