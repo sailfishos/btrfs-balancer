@@ -40,7 +40,10 @@ check_balance_need
 echo $NEED_BALANCE
 
 if test $NEED_BALANCE == 1; then
-	btrfs balance start /
+	# We start from empty block groups and advance to more full ones.
+	for usage in 0 10 20 40 60 80 96; do
+		btrfs balance start -dusage=$usage /
+	done
 fi
 
 kill $PID_KEEPALIVE
