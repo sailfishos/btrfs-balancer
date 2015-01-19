@@ -4,7 +4,7 @@ ROOTDEV=/dev/mmcblk0p28
 
 NEED_BALANCE=0
 # Threshold for percentage of free space allocation to run balance
-BALANCE_THRESHOLD=80
+BALANCE_THRESHOLD=75
 
 check_balance_need()
 {
