@@ -3,7 +3,7 @@ Description=btrfs balance service
 
 [Service]
 Type=simple
-ExecStart=/usr/sbin/btrfs-balance
+ExecStart=/usr/sbin/btrfs-balancer
 
 [Install]
 WantedBy=btrfs-balancer.timer

@@ -1,18 +1,16 @@
-Btrfs balancer is a set of tools and scripts that create systemd service
-to periodically run btrfs balance operation on a devices filesystem.
+btrfs-balancer
+--------------
 
-It consists of roughly 3 parts:
+btrfs-balancer periodically runs a btrfs balance operation on a devices
+filesystem when needed.
 
-* keepalive tool for keeping device out of suspend when we run the balance
-* btrfs-balance script that does simple filesystem status check to see if
-  the balance operation is worth running and executes btrfs balance and
-  keepalive when needed.
-* systemd service files to run btrfs-balance periodically
+It consists of 2 parts:
 
-Building keepalive:
+    * btrfs-balancer utility that checks free space and decides if the balance
+      operation is worth running and if so, executes btrfs balance.
 
-  make all
+    * systemd service files to run btrfs-balancer periodically
 
 Building RPM package with mb script:
 
-  mb build -t <your target> rpm/btrfs-balancer.spec
+    mb2 build -t <your target> rpm/btrfs-balancer.spec
