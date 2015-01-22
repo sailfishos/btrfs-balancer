@@ -148,9 +148,8 @@ if test $NEED_BALANCE == 1; then
 			keepalive_cleanup 28 #ENOSPC
 		fi
 	done
+	report_progress 100
 fi
-
-report_progress 100
 
 echo "Btrfs balance finished"
 keepalive_cleanup 0
