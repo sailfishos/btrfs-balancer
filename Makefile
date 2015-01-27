@@ -9,34 +9,17 @@ DATADIR		?= $(PREFIX)/share
 INCLUDEDIR	?= $(PREFIX)/include
 UNITDIR		?= /lib/systemd/system
 
-PROGRAM		= keepalive
-PACKAGE		= $(PROGRAM)-`git describe --tags`
+PACKAGE		= btrfs-balancer-`git describe --tags`
 
-# pkg-config dependencies here
-PKGC_LIBS	= glib-2.0
-PKGC_LIBS	+= gio-2.0
-PKGC_LIBS	+= mce
 
-# pkg-config flags
-PKGC_CFLAGS	= `pkg-config --cflags $(PKGC_LIBS)`
-PKGC_LDFLAGS	= `pkg-config --libs $(PKGC_LIBS)`
-
-OPTFLAGS	?= -D_FILE_OFFSET_BITS=64
-CFLAGS		?= -g -Wall
-CFLAGS		+= $(OPTFLAGS)
-CFLAGS		+= $(PKGC_CFLAGS)
-LDFLAGS		+= $(PKGC_LDFLAGS)
-
-all: $(PROGRAM)
+all:
 
 distclean: clean
 	$(RM) -rf $(PACKAGE)*
 clean:
-	$(RM) *.o $(PROGRAM) *~
+	$(RM) *~
 
 install: all
-	install -d $(DESTDIR)/$(BINDIR)
-	install $(PROGRAM) $(DESTDIR)/$(BINDIR)
 	install -d $(DESTDIR)/$(SBINDIR)
 	install scripts/btrfs-balance $(DESTDIR)/$(SBINDIR)
 	install -d $(DESTDIR)/$(UNITDIR)
@@ -47,11 +30,6 @@ install: all
 
 
 dist: clean
-	rm -rf $(PACKAGE)
-	mkdir $(PACKAGE)
-	cp -a *.c Makefile $(PACKAGE)
-	(cd $(PACKAGE); find . -name .svn -o -name *~ | xargs rm -rf)
-	tar cjf $(PACKAGE).tar.bz2 $(PACKAGE)
-	rm -rf $(PACKAGE)
+	git archive --format=tar.gz --prefix=$(PACKAGE)/ -o $(PACKAGE).tar.gz master
 
 .PHONY: all clean distclean install dist
