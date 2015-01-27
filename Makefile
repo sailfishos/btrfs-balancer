@@ -38,7 +38,7 @@ install: all
 	install -d $(DESTDIR)/$(BINDIR)
 	install $(PROGRAM) $(DESTDIR)/$(BINDIR)
 	install -d $(DESTDIR)/$(SBINDIR)
-	install service/btrfs-balance $(DESTDIR)/$(SBINDIR)
+	install scripts/btrfs-balance $(DESTDIR)/$(SBINDIR)
 	install -d $(DESTDIR)/$(UNITDIR)
 	install -t $(DESTDIR)/$(UNITDIR) service/btrfs-balance.service service/btrfs-balancer.timer
 	install -d $(DESTDIR)/$(UNITDIR)/multi-user.target.wants
