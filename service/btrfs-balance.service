@@ -3,7 +3,7 @@ Description=btrfs balance service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/keepalive-tool /usr/sbin/btrfs-balance
+ExecStart=/bin/dbus-send --system --print-reply --dest=org.nemomobile.BtrfsBalancer /BtrfsBalancer org.nemomobile.BtrfsBalancer.maintenance int32:50 int32:20
 
 [Install]
 WantedBy=btrfs-balancer.timer
