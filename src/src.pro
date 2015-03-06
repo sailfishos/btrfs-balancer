@@ -5,6 +5,8 @@ target.path = /usr/sbin
 QT = core dbus
 CONFIG += link_pkgconfig
 
+LIBS += -lssu
+
 INSTALLS += target
 
 PKGCONFIG += keepalive

@@ -10,6 +10,8 @@ Source0:	%{name}-%{version}.tar.bz2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(keepalive)
+Requires:       sailfish-snapshot
+BuildRequires:  ssu-devel >= 0.37.9
 Requires:	systemd
 
 %description

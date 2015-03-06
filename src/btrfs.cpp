@@ -27,19 +27,32 @@
 
 #include "btrfs.h"
 
+#include <QByteArray>
+#include <QFile>
 #include <QRegExp>
 #include <QDebug>
+
+// libssu
+#include <ssudeviceinfo.h>
 
 namespace
 {
 // path of the btrfs tool
 const QString BTRFS_PATH("/usr/sbin/btrfs");
 
-// default root device to use
-const QString ROOT_DEVICE("/dev/mmcblk0p28");
+// path to the device-specific partition configuration (%1 being the device
+// model placeholder)
+const QString PARTITION_CONF("/usr/share/sailfish-snapshot/partition-%1.conf");
+
+// system configuration key of partition
+const QString CONF_PARTITION("PARTITION");
+
+// mount point of the root partition that is to be balanced
+const QString ROOT_MOUNTPOINT("/");
 
 // regexp to retrieve size usage information from btrfs output
 const QRegExp RE_USAGE("size ([0-9.]+\\w+) used ([0-9.]+\\w+)");
+
 
 qint64 parseSize(const QString& size)
 {
@@ -66,12 +79,41 @@ Btrfs::Btrfs(QObject *parent)
     : QObject(parent)
     , m_currentProcess(0)
 {
-
+    loadDeviceConfiguration();
 }
 
-void Btrfs::allocation()
+void Btrfs::loadDeviceConfiguration()
+{
+    m_deviceConfiguration.clear();
+
+    const QString model = SsuDeviceInfo().deviceModel().toLower();
+    QFile configFile(PARTITION_CONF.arg(model));
+    if (configFile.exists() && configFile.open(QIODevice::ReadOnly)) {
+        while (!configFile.atEnd()) {
+            const QByteArray line = configFile.readLine();
+            int pos = line.indexOf('=');
+            if (pos == -1 || line.startsWith('#')) {
+                continue;
+            }
+
+            const QString key = QString::fromUtf8(line.left(pos)).trimmed();
+            const QString value = QString::fromUtf8(line.mid(pos + 1)).trimmed();
+            m_deviceConfiguration[key] = value;
+            qDebug() << "Configuration:" << key << "=" << value;
+        }
+    } else {
+        qWarning() << "Unable to read partition configuration:"
+                   << PARTITION_CONF.arg(model);
+    }
+}
+
+void Btrfs::requestAllocation()
 {
     if (m_currentProcess) {
+        emit allocationReceived(-1, -1);
+        return;
+    } else if (!m_deviceConfiguration.contains(CONF_PARTITION)) {
+        qCritical() << "Cannot get allocation. No partition configured.";
         emit allocationReceived(-1, -1);
         return;
     }
@@ -81,16 +123,14 @@ void Btrfs::allocation()
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("LANG", "C");
     m_currentProcess->setProcessEnvironment(env);
-    m_currentProcess->setArguments(QStringList()
-                                   << "filesystem"
-                                   << "show");
+    m_currentProcess->setArguments(QStringList() << "filesystem" << "show");
 
     connect(m_currentProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
             this, SLOT(slotAllocationFinished(int,QProcess::ExitStatus)));
     m_currentProcess->start(QProcess::ReadOnly);
 }
 
-void Btrfs::balance(int usage)
+void Btrfs::startBalance(int maxUsagePercent)
 {
     if (m_currentProcess) {
         emit balanceFinished(false);
@@ -105,8 +145,8 @@ void Btrfs::balance(int usage)
     m_currentProcess->setArguments(QStringList()
                                    << "balance"
                                    << "start"
-                                   << QString("-dusage=%1").arg(usage)
-                                   << "/");
+                                   << QString("-dusage=%1").arg(maxUsagePercent)
+                                   << ROOT_MOUNTPOINT);
 
     connect(m_currentProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
             this, SLOT(slotBalanceFinished(int,QProcess::ExitStatus)));
@@ -124,7 +164,7 @@ void Btrfs::slotAllocationFinished(int exitCode, QProcess::ExitStatus status)
     while (m_currentProcess->canReadLine()) {
         QString line = m_currentProcess->readLine().trimmed();
 
-        if (!line.endsWith(" path " + ROOT_DEVICE)) {
+        if (!line.endsWith(" path " + m_deviceConfiguration.value(CONF_PARTITION))) {
             continue;
         }
 

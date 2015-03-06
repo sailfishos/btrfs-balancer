@@ -28,6 +28,7 @@
 #ifndef BTRFS_H
 #define BTRFS_H
 
+#include <QMap>
 #include <QObject>
 #include <QProcess>
 #include <QString>
@@ -40,13 +41,16 @@ class Btrfs : public QObject
 public:
     explicit Btrfs(QObject *parent = 0);
 
-    void allocation();
-    void balance(int allocation);
+    void requestAllocation();
+    void startBalance(int maxUsagePercent);
 
 
 signals:
     void allocationReceived(qint64 size, qint64 used);
     void balanceFinished(bool success);
+
+private:
+    void loadDeviceConfiguration();
 
 private slots:
     void slotAllocationFinished(int exitCode, QProcess::ExitStatus status);
@@ -54,6 +58,7 @@ private slots:
 
 private:
     QProcess *m_currentProcess;
+    QMap<QString, QString> m_deviceConfiguration;
 };
 
 #endif // BTRFS_H

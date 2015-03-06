@@ -115,7 +115,7 @@ void Maintenance::slotAllocationReceived(qlonglong size, qlonglong used)
         if (percentage >= m_allocationThreshold) {
             qDebug() << percentage << "% of space allocated, threshold is"
                      << m_allocationThreshold << "%, balancing needed";
-            m_balancer->balance();
+            m_balancer->startBalance();
         } else {
             qDebug() << "No need for balance:" << percentage << "% allocated,"
                      << "balance limit is" << m_allocationThreshold << "%";

@@ -59,7 +59,7 @@ public:
      * Emits finished signal after success or failure.
      * Emits progress signals inbetween.
      */
-    void balance();
+    void startBalance();
 
 signals:
     void pendingChanged(bool pending);

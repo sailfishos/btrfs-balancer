@@ -59,14 +59,14 @@ void BtrfsBalancer::checkAllocation()
         Btrfs* btrfs = new Btrfs;
         connect(btrfs, SIGNAL(allocationReceived(qint64,qint64)),
                 this, SLOT(slotReceivedAllocation(qint64,qint64)));
-        btrfs->allocation();
+        btrfs->requestAllocation();
     } else {
         emit allocation(-1, -1);
         emit pendingChanged(false);
     }
 }
 
-void BtrfsBalancer::balance()
+void BtrfsBalancer::startBalance()
 {
     emit pendingChanged(true);
     m_usageLevels << 0 << 10 << 20 << 35 << 50 << 75 << 96;
@@ -83,7 +83,7 @@ void BtrfsBalancer::process()
         Btrfs* btrfs = new Btrfs();
         connect(btrfs, SIGNAL(balanceFinished(bool)),
                 this, SLOT(slotBalanceFinished(bool)));
-        btrfs->balance(usage);
+        btrfs->startBalance(usage);
         emit progress(usage);
     } else {
         qDebug() << "Balancing finished";

@@ -85,7 +85,7 @@ void Service::checkAllocation()
 void Service::balance()
 {
     if (!isPrivileged()) return;
-    m_balancer->balance();
+    m_balancer->startBalance();
 }
 
 void Service::maintenance(int allocationThreshold,
