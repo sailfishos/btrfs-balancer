@@ -27,7 +27,6 @@
 
 #include "btrfs.h"
 
-#include <QLocale>
 #include <QRegExp>
 #include <QDebug>
 
@@ -46,9 +45,6 @@ qint64 parseSize(const QString& size)
 {
     double value = -1;
 
-    QLocale defaultLocale = QLocale();
-    QLocale::setDefault(QLocale::C);
-
     if (size.endsWith("MiB")) {
         value = size.left(size.length() - 3).toDouble()
                 * 1024 * 1024;
@@ -61,7 +57,6 @@ qint64 parseSize(const QString& size)
                 * 1024 * 1024 * 1024 * 1024;
     }
 
-    QLocale::setDefault(defaultLocale);
     return static_cast<qint64>(value);
 }
 
@@ -83,6 +78,9 @@ void Btrfs::allocation()
 
     m_currentProcess = new QProcess;
     m_currentProcess->setProgram(BTRFS_PATH);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("LANG", "C");
+    m_currentProcess->setProcessEnvironment(env);
     m_currentProcess->setArguments(QStringList()
                                    << "filesystem"
                                    << "show");
@@ -101,6 +99,9 @@ void Btrfs::balance(int usage)
 
     m_currentProcess = new QProcess;
     m_currentProcess->setProgram(BTRFS_PATH);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("LANG", "C");
+    m_currentProcess->setProcessEnvironment(env);
     m_currentProcess->setArguments(QStringList()
                                    << "balance"
                                    << "start"
