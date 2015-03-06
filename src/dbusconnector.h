@@ -86,13 +86,14 @@ public:
     DBusConnector(QObject *parent = 0);
     virtual ~DBusConnector();
 
-    bool isConnected() const { return m_service != 0; }
+    bool isConnected() const { return m_isConnected; }
 
 private:
     void acquireService();
 
 private:
     Service* m_service;
+    bool m_isConnected;
 };
 
 #endif // DBUSCONNECTOR_H

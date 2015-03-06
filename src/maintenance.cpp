@@ -87,7 +87,7 @@ void Maintenance::start()
     qDebug() << "Starting maintenance btrfs balancing";
     if (! isBatteryCharging() && batteryCharge() < m_batteryThreshold) {
         qWarning() << "Cannot balance. Battery charge is too low."
-                   << "Please plugin charger";
+                   << "Please plug in charger";
         emit finished();
     } else {
         m_balancer->checkStatus();

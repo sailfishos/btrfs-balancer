@@ -157,6 +157,7 @@ DBusConnector::DBusConnector(QObject *parent)
     : QObject(parent)
     , QDBusContext()
     , m_service(0)
+    , m_isConnected(false)
 {
     acquireService();
 }
@@ -174,7 +175,7 @@ void DBusConnector::acquireService()
     QDBusConnection bus = QDBusConnection::systemBus();
 
     if (!bus.isConnected()) {
-        qWarning() << "Could not connect to system bus.";
+        qCritical() << "Could not connect to system bus.";
         return;
     }
 
@@ -182,9 +183,11 @@ void DBusConnector::acquireService()
         m_service = new Service(this, this);
 
         if (!bus.registerObject(DBUS_PATH, this)) {
-            qWarning() << "Failed to register service object:" << DBUS_PATH;
+            qCritical() << "Failed to register service object:" << DBUS_PATH;
+        } else {
+            m_isConnected = true;
         }
     } else {
-        qWarning() << "Service name is already in use or not authorized:" << DBUS_SERVICE;
+        qCritical() << "Service name is already in use or not authorized:" << DBUS_SERVICE;
     }
 }

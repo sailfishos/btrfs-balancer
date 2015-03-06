@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     if (dbusConnector.isConnected()) {
         return app.exec();
     } else {
-        qWarning() << "Giving up.";
+        qCritical("Connection to D-Bus and/or service registration failed.");
         return 1;
     }
 }
