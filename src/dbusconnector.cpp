@@ -61,6 +61,9 @@ Service::Service(QDBusContext *context, QObject *parent)
     connect(m_balancer.data(), SIGNAL(finished(bool)),
             this, SIGNAL(finished(bool)));
 
+    connect(m_balancer.data(), SIGNAL(pendingChanged(bool)),
+            this, SLOT(slotPendingChanged(bool)));
+
     connect(&m_idleTimer, SIGNAL(timeout()),
             this, SLOT(slotIdleTimerTriggered()));
 
@@ -124,15 +127,18 @@ bool Service::isPrivileged()
     return true;
 }
 
-void Service::slotStatusReceived(BtrfsBalancer::Status s)
+void Service::slotPendingChanged(bool pending)
 {
-    emit status(static_cast<int>(s));
-
-    if (s == BtrfsBalancer::BALANCING) {
+    if (pending) {
         m_idleTimer.stop();
     } else {
         m_idleTimer.start(IDLE_TIMEOUT);
     }
+}
+
+void Service::slotStatusReceived(BtrfsBalancer::Status s)
+{
+    emit status(static_cast<int>(s));
 }
 
 void Service::slotIdleTimerTriggered()
@@ -152,13 +158,11 @@ DBusConnector::DBusConnector(QObject *parent)
     , QDBusContext()
     , m_service(0)
 {
-    qDebug() << Q_FUNC_INFO;
     acquireService();
 }
 
 DBusConnector::~DBusConnector()
 {
-    qDebug() << Q_FUNC_INFO;
     if (m_service) {
         QDBusConnection::systemBus().unregisterService(DBUS_SERVICE);
     }

@@ -62,6 +62,7 @@ public:
     void balance();
 
 signals:
+    void pendingChanged(bool pending);
     void status(BtrfsBalancer::Status status);
     void allocation(qlonglong size, qlonglong used);
     void progress(int percentage);

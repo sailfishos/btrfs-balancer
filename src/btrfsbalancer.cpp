@@ -47,11 +47,14 @@ void BtrfsBalancer::setStatus(Status newStatus)
 
 void BtrfsBalancer::checkStatus()
 {
+    emit pendingChanged(true);
     emit status(m_currentStatus);
+    emit pendingChanged(false);
 }
 
 void BtrfsBalancer::checkAllocation()
 {
+    emit pendingChanged(true);
     if (m_currentStatus == READY) {
         Btrfs* btrfs = new Btrfs;
         connect(btrfs, SIGNAL(allocationReceived(qint64,qint64)),
@@ -59,11 +62,13 @@ void BtrfsBalancer::checkAllocation()
         btrfs->allocation();
     } else {
         emit allocation(-1, -1);
+        emit pendingChanged(false);
     }
 }
 
 void BtrfsBalancer::balance()
 {
+    emit pendingChanged(true);
     m_usageLevels << 0 << 10 << 20 << 35 << 50 << 75 << 96;
     setStatus(BALANCING);
     process();
@@ -85,6 +90,7 @@ void BtrfsBalancer::process()
         emit progress(100);
         emit finished(true);
         setStatus(READY);
+        emit pendingChanged(false);
     }
 }
 
@@ -99,6 +105,7 @@ void BtrfsBalancer::slotReceivedAllocation(qint64 size, qint64 used)
         qDebug() << "Failed to determine filesystem allocation";
         emit allocation(-1, -1);
     }
+    emit pendingChanged(false);
 }
 
 void BtrfsBalancer::slotBalanceFinished(bool success)
@@ -112,5 +119,6 @@ void BtrfsBalancer::slotBalanceFinished(bool success)
         qWarning() << "Balancing failed. Please free up more space and try again";
         emit finished(false);
         setStatus(READY);
+        emit pendingChanged(false);
     }
 }

@@ -49,7 +49,7 @@ public slots:
     Q_NOREPLY void balance();
 
     /* Runs a maintenance operation, if the battery fill level is above the
-     * given threshold, and filesystem allocation is at at least the given
+     * given threshold, and filesystem allocation is at least at the given
      * allocation threshold.
      */
     Q_NOREPLY void maintenance(int allocationThreshold,
@@ -65,6 +65,7 @@ private:
     bool isPrivileged();
 
 private slots:
+    void slotPendingChanged(bool pending);
     void slotStatusReceived(BtrfsBalancer::Status s);
     void slotIdleTimerTriggered();
     void slotMaintenanceFinished();
