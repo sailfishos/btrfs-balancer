@@ -27,6 +27,7 @@
 
 #include "btrfsbalancer.h"
 
+#include <qmath.h>
 #include <QDebug>
 
 
@@ -81,6 +82,8 @@ void BtrfsBalancer::process()
 
         qDebug() << "Balancing..." << usage << "%";
         Btrfs* btrfs = new Btrfs();
+        connect(btrfs, SIGNAL(balanceProgress(int)),
+                this, SLOT(slotBalanceProgress(int)));
         connect(btrfs, SIGNAL(balanceFinished(bool)),
                 this, SLOT(slotBalanceFinished(bool)));
         btrfs->startBalance(usage);
@@ -106,6 +109,20 @@ void BtrfsBalancer::slotReceivedAllocation(qint64 size, qint64 used)
         emit allocation(-1, -1);
     }
     emit pendingChanged(false);
+}
+
+void BtrfsBalancer::slotBalanceProgress(int percents)
+{
+    // this progress is a subprogress between the current usage level and the
+    // next, or 100, if there is no next
+
+    int currentUsage = m_usageLevels.size() > 0 ? m_usageLevels.first()
+                                                : 100;
+    int nextUsage = m_usageLevels.size() > 1 ? m_usageLevels.at(1)
+                                             : 100;
+
+    double subProgress = percents * (nextUsage - currentUsage) / 100.0;
+    emit progress(qFloor(currentUsage + subProgress));
 }
 
 void BtrfsBalancer::slotBalanceFinished(bool success)

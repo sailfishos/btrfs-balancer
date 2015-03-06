@@ -74,6 +74,7 @@ private:
 
 private slots:
     void slotReceivedAllocation(qint64 size, qint64 used);
+    void slotBalanceProgress(int percents);
     void slotBalanceFinished(bool success);
 
 private:

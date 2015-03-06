@@ -32,6 +32,7 @@
 #include <QObject>
 #include <QProcess>
 #include <QString>
+#include <QTimer>
 
 /* Asynchronous interface to some functionality of the btrfs system tool.
  */
@@ -47,18 +48,23 @@ public:
 
 signals:
     void allocationReceived(qint64 size, qint64 used);
+    void balanceProgress(int percents);
     void balanceFinished(bool success);
 
 private:
     void loadDeviceConfiguration();
+    int getBalanceProgress();
 
 private slots:
+    void slotBalanceProgress();
     void slotAllocationFinished(int exitCode, QProcess::ExitStatus status);
     void slotBalanceFinished(int exitCode, QProcess::ExitStatus status);
 
 private:
     QProcess *m_currentProcess;
     QMap<QString, QString> m_deviceConfiguration;
+    QTimer m_progressTimer;
+    int m_currentProgress;
 };
 
 #endif // BTRFS_H

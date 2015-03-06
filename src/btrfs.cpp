@@ -53,6 +53,12 @@ const QString ROOT_MOUNTPOINT("/");
 // regexp to retrieve size usage information from btrfs output
 const QRegExp RE_USAGE("size ([0-9.]+\\w+) used ([0-9.]+\\w+)");
 
+// regexp to retrieve the balancing progress from btrfs output
+// note that besides percent numbers, there can also be nan
+const QRegExp RE_PROGRESS(", +([0-9na]+)% left");
+
+// interval in ms between polling the balancing progress
+const int PROGRESS_TIMER_INTERVAL = 1000;
 
 qint64 parseSize(const QString& size)
 {
@@ -78,8 +84,12 @@ qint64 parseSize(const QString& size)
 Btrfs::Btrfs(QObject *parent)
     : QObject(parent)
     , m_currentProcess(0)
+    , m_currentProgress(0)
 {
     loadDeviceConfiguration();
+
+    connect(&m_progressTimer, SIGNAL(timeout()),
+            this, SLOT(slotBalanceProgress()));
 }
 
 void Btrfs::loadDeviceConfiguration()
@@ -151,6 +161,48 @@ void Btrfs::startBalance(int maxUsagePercent)
     connect(m_currentProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
             this, SLOT(slotBalanceFinished(int,QProcess::ExitStatus)));
     m_currentProcess->start(QProcess::ReadOnly);
+
+    m_currentProgress = 0;
+    m_progressTimer.start(PROGRESS_TIMER_INTERVAL);
+}
+
+int Btrfs::getBalanceProgress()
+{
+    QProcess process;
+    process.setProgram(BTRFS_PATH);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("LANG", "C");
+    process.setProcessEnvironment(env);
+    process.setArguments(QStringList()
+                         << "balance"
+                         << "status"
+                         << ROOT_MOUNTPOINT);
+    process.start(QProcess::ReadOnly);
+    process.waitForFinished(1000);
+
+    // don't care about the exit code... it is not 0 for success
+    while (!process.atEnd()) {
+        const QString line = process.readLine().trimmed();
+        if (RE_PROGRESS.indexIn(line) != -1) {
+            const QString progressString = RE_PROGRESS.cap(1);
+            int progress = progressString == "nan"
+                    ? 0 // I guess that's 0 with bug in btrfs
+                    : progressString.toInt();
+            // btrfs balancing progress is going backwards, so invert it
+            return qMax(100 - progress, 0);
+        }
+    }
+    // could not determine progress
+    return -1;
+}
+
+void Btrfs::slotBalanceProgress()
+{
+    int progress = getBalanceProgress();
+    if (progress != m_currentProgress && progress != -1) {
+        m_currentProgress = progress;
+        emit balanceProgress(progress);
+    }
 }
 
 void Btrfs::slotAllocationFinished(int exitCode, QProcess::ExitStatus status)
@@ -186,6 +238,7 @@ void Btrfs::slotBalanceFinished(int exitCode, QProcess::ExitStatus status)
 
     m_currentProcess->deleteLater();
     m_currentProcess = 0;
+    m_progressTimer.stop();
 
     if (exitCode == 0) {
         emit balanceFinished(true);
