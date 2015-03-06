@@ -41,7 +41,7 @@ class Service : public QDBusAbstractAdaptor
     Q_CLASSINFO("D-Bus Interface", "org.nemomobile.BtrfsBalancer")
 
 public:
-    Service(QObject *parent = 0);
+    Service(QDBusContext *context, QObject *parent = 0);
 
 public slots:
     Q_NOREPLY void checkStatus();
@@ -61,12 +61,16 @@ signals:
     void progress(int);
     void finished(bool success);
 
+private:
+    bool isPrivileged();
+
 private slots:
     void slotStatusReceived(BtrfsBalancer::Status s);
     void slotIdleTimerTriggered();
     void slotMaintenanceFinished();
 
 private:
+    QDBusContext *m_context;
     QSharedPointer<BtrfsBalancer> m_balancer;
     QTimer m_idleTimer;
 };

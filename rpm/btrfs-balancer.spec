@@ -11,7 +11,6 @@ BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(keepalive)
 Requires:	systemd
-Requires:	libkeepalive-glib-tools >= 1.3.3
 
 %description
 %{summary}

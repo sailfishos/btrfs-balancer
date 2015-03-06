@@ -30,6 +30,9 @@
 
 #include <QCoreApplication>
 #include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QDBusMessage>
+#include <QFileInfo>
 #include <QString>
 #include <QDebug>
 
@@ -44,8 +47,9 @@ const int IDLE_TIMEOUT = 30000;
 }
 
 
-Service::Service(QObject *parent)
+Service::Service(QDBusContext *context, QObject *parent)
     : QDBusAbstractAdaptor(parent)
+    , m_context(context)
     , m_balancer(new BtrfsBalancer)
 {
     connect(m_balancer.data(), SIGNAL(status(BtrfsBalancer::Status)),
@@ -65,28 +69,59 @@ Service::Service(QObject *parent)
 
 void Service::checkStatus()
 {
+    if (!isPrivileged()) return;
     m_balancer->checkStatus();
 }
 
 void Service::checkAllocation()
 {
+    if (!isPrivileged()) return;
     m_balancer->checkAllocation();
 }
 
 void Service::balance()
 {
+    if (!isPrivileged()) return;
     m_balancer->balance();
 }
 
 void Service::maintenance(int allocationThreshold,
                           int batteryThreshold)
 {
+    if (!isPrivileged()) return;
     Maintenance *maintenance = new Maintenance(m_balancer,
                                                allocationThreshold,
                                                batteryThreshold);
     connect(maintenance, SIGNAL(finished()),
             this, SLOT(slotMaintenanceFinished()));
     maintenance->start();
+}
+
+bool Service::isPrivileged()
+{
+    // courtesy of nemomobile/password-manager
+
+    // this object has m_context as parent, so m_context will always be valid
+    // during its lifetime
+
+    if (!m_context->calledFromDBus()) {
+        // Local function calls are always privileged
+        return true;
+    }
+
+    // Get the PID of the calling process
+    pid_t pid = m_context->connection().interface()->servicePid(
+                m_context->message().service());
+
+    // The /proc/<pid> directory is owned by EUID:EGID of the process
+    QFileInfo info(QString("/proc/%1").arg(pid));
+    if (info.group() != "privileged" && info.owner() != "root") {
+        m_context->sendErrorReply(
+                    QDBusError::AccessDenied,
+                    QString("PID %1 is not in privileged group").arg(pid));
+        return false;
+    }
+    return true;
 }
 
 void Service::slotStatusReceived(BtrfsBalancer::Status s)
@@ -140,7 +175,7 @@ void DBusConnector::acquireService()
     }
 
     if (bus.registerService(DBUS_SERVICE)) {
-        m_service = new Service(this);
+        m_service = new Service(this, this);
 
         if (!bus.registerObject(DBUS_PATH, this)) {
             qWarning() << "Failed to register service object:" << DBUS_PATH;
