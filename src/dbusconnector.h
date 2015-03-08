@@ -46,7 +46,7 @@ public:
 public slots:
     Q_NOREPLY void checkStatus();
     Q_NOREPLY void checkAllocation();
-    Q_NOREPLY void balance();
+    Q_NOREPLY void startBalance();
 
     /* Runs a maintenance operation, if the battery fill level is above the
      * given threshold, and filesystem allocation is at least at the given

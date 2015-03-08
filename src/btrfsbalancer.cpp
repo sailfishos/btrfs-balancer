@@ -30,6 +30,15 @@
 #include <qmath.h>
 #include <QDebug>
 
+namespace
+{
+
+// the max usages in percents for which to run the balancing operation, in the
+// order of their application
+const QList<int> MAX_USAGE_PERCENTS =
+        QList<int>() << 0 << 10 << 20 << 35 << 50 << 75 << 96;
+
+}
 
 BtrfsBalancer::BtrfsBalancer(QObject *parent)
     : QObject(parent)
@@ -70,7 +79,7 @@ void BtrfsBalancer::checkAllocation()
 void BtrfsBalancer::startBalance()
 {
     emit pendingChanged(true);
-    m_usageLevels << 0 << 10 << 20 << 35 << 50 << 75 << 96;
+    m_usageLevels = MAX_USAGE_PERCENTS;
     setStatus(BALANCING);
     process();
 }

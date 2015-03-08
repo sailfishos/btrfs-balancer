@@ -40,7 +40,7 @@ public:
     enum Status
     {
         READY = 0,
-        BALANCING
+        BALANCING,
     };
 
     explicit BtrfsBalancer(QObject *parent = 0);

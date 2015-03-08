@@ -82,7 +82,7 @@ void Service::checkAllocation()
     m_balancer->checkAllocation();
 }
 
-void Service::balance()
+void Service::startBalance()
 {
     if (!isPrivileged()) return;
     m_balancer->startBalance();
