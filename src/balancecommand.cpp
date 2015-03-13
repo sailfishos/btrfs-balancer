@@ -99,7 +99,7 @@ BalanceCommand::BalanceCommand(int batteryThreshold,
                 DBUS_INTERFACE,
                 "finished",
                 this,
-                SLOT(slotFinished()));
+                SLOT(slotFinished(bool)));
 }
 
 void BalanceCommand::start()
