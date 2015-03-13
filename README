@@ -1,14 +1,13 @@
-Btrfs balancer is a D-Bus service for running btrfs operations on
+btrfs-balancer is a D-Bus service for running btrfs operations on
 a device's filesystem periodically via systemd, or on request.
 
 It consists of roughly 2 parts:
 
 * btrfs-balancer D-Bus service with auto-activation that starts automatically
   when requested and stops when idle.
-  The btrfs-balancer has a maintenance method that does a simple filesystem
-  status and battery fill level check to see if the balance operation is
-  worth running and executes btrfs balance when needed and permitted by the
-  battery status.
+  The btrfs-balancer has a client mode in which it acts as a command line
+  client. Invoke "btrfs-balancer --help" for details.
+
 * systemd service files to run the btrfs-balancer maintenance method
   periodically.
 
