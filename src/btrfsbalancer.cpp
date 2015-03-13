@@ -64,6 +64,7 @@ void BtrfsBalancer::checkStatus()
 
 void BtrfsBalancer::checkAllocation()
 {
+    qDebug() << Q_FUNC_INFO;
     emit pendingChanged(true);
     if (m_currentStatus == READY) {
         Btrfs* btrfs = new Btrfs;
@@ -142,7 +143,7 @@ void BtrfsBalancer::slotBalanceFinished(bool success)
         m_usageLevels.removeFirst();
         process();
     } else {
-        qWarning() << "Balancing failed. Please free up more space and try again";
+        qWarning() << "Balancing failed.";
         emit finished(false);
         setStatus(READY);
         emit pendingChanged(false);

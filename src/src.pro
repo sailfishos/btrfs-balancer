@@ -3,7 +3,7 @@ TARGET = btrfs-balancer
 target.path = /usr/sbin
 
 QT = core dbus
-CONFIG += link_pkgconfig
+CONFIG += console link_pkgconfig
 
 LIBS += -lssu
 
@@ -16,10 +16,16 @@ SOURCES += \
     dbusconnector.cpp \
     btrfsbalancer.cpp \
     btrfs.cpp \
-    maintenance.cpp
+    options.cpp \
+    balancecommand.cpp \
+    allocationcommand.cpp
 
 HEADERS += \
     dbusconnector.h \
     btrfsbalancer.h \
     btrfs.h \
-    maintenance.h
+    options.h \
+    dbusservice.h \
+    balancecommand.h \
+    allocationcommand.h \
+    command.h

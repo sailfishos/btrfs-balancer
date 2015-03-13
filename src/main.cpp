@@ -25,25 +25,51 @@
 ****************************************************************************************/
 
 
+#include "allocationcommand.h"
+#include "balancecommand.h"
 #include "dbusconnector.h"
+#include "options.h"
 
 #include <QCoreApplication>
+#include <QSharedPointer>
+#include <QTimer>
 #include <QDebug>
 #include <backgroundactivity.h>
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    DBusConnector dbusConnector;
+    QSharedPointer<Command> command;
 
     // keep CPU alive while this service is running
     BackgroundActivity activity;
     activity.setState(BackgroundActivity::Running);
 
-    if (dbusConnector.isConnected()) {
+    Options options(app.arguments());
+
+    if (options.command() == Options::SERVER) {
+
+        DBusConnector dbusConnector;
+        if (!dbusConnector.isConnected()) {
+            qCritical("Connection to D-Bus and/or service registration failed.");
+            return 1;
+        }
         return app.exec();
-    } else {
-        qCritical("Connection to D-Bus and/or service registration failed.");
-        return 1;
+
+    } else if (options.command() == Options::ALLOCATION) {
+
+        command = QSharedPointer<Command>(new AllocationCommand);
+
+    } else if (options.command() == Options::BALANCE) {
+
+        command = QSharedPointer<Command>(
+                    new BalanceCommand(options.batteryThreshold(),
+                                       options.allocationThreshold()));
+
     }
+
+    if (!command.isNull()) {
+        QTimer::singleShot(0, command.data(), SLOT(start()));
+    }
+    return app.exec();
 }

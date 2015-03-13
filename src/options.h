@@ -25,39 +25,33 @@
 ****************************************************************************************/
 
 
-#ifndef MAINTENANCE_H
-#define MAINTENANCE_H
+#ifndef OPTIONS_H
+#define OPTIONS_H
 
-#include "btrfsbalancer.h"
+#include <QStringList>
 
-#include <QObject>
-#include <QSharedPointer>
-
-class Maintenance : public QObject
+/* Class for parsing the command line arguments.
+ */
+class Options
 {
-    Q_OBJECT
 public:
-    Maintenance(QSharedPointer<BtrfsBalancer> balancer,
-                int allocationThreshold,
-                int batteryThreshold,
-                QObject *parent = 0);
+    enum Command
+    {
+        NO_COMMAND,
+        SERVER,
+        BALANCE,
+        ALLOCATION,
+    };
 
-    virtual ~Maintenance();
-
-    void start();
-
-signals:
-    void finished();
-
-private slots:
-    void slotStatusReceived(BtrfsBalancer::Status status);
-    void slotAllocationReceived(qlonglong size, qlonglong used);
+    Options(const QStringList &arguments);
+    Command command() const { return m_command; }
+    int batteryThreshold() const { return m_batteryThreshold; }
+    int allocationThreshold() const { return m_allocationThreshold; }
 
 private:
-    QSharedPointer<BtrfsBalancer> m_balancer;
-    bool m_allocationRequired;
-    int m_allocationThreshold;
+    Command m_command;
     int m_batteryThreshold;
+    int m_allocationThreshold;
 };
 
-#endif // MAINTENANCE_H
+#endif // OPTIONS_H

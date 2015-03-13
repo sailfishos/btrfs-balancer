@@ -26,7 +26,7 @@
 
 
 #include "dbusconnector.h"
-#include "maintenance.h"
+#include "dbusservice.h"
 
 #include <QCoreApplication>
 #include <QDBusConnection>
@@ -38,10 +38,6 @@
 
 namespace
 {
-const QString DBUS_SERVICE("org.nemomobile.BtrfsBalancer");
-const QString DBUS_PATH("/BtrfsBalancer");
-const QString DBUS_INTERFACE("org.nemomobile.BtrfsBalancer");
-
 // timeout in ms after which we service stops after being idle
 const int IDLE_TIMEOUT = 30000;
 }
@@ -50,18 +46,18 @@ const int IDLE_TIMEOUT = 30000;
 Service::Service(QDBusContext *context, QObject *parent)
     : QDBusAbstractAdaptor(parent)
     , m_context(context)
-    , m_balancer(new BtrfsBalancer)
 {
-    connect(m_balancer.data(), SIGNAL(status(BtrfsBalancer::Status)),
+    m_balancer = new BtrfsBalancer(this);
+    connect(m_balancer, SIGNAL(status(BtrfsBalancer::Status)),
             this, SLOT(slotStatusReceived(BtrfsBalancer::Status)));
-    connect(m_balancer.data(), SIGNAL(allocation(qlonglong,qlonglong)),
+    connect(m_balancer, SIGNAL(allocation(qlonglong,qlonglong)),
             this, SIGNAL(allocation(qlonglong,qlonglong)));
-    connect(m_balancer.data(), SIGNAL(progress(int)),
+    connect(m_balancer, SIGNAL(progress(int)),
             this, SIGNAL(progress(int)));
-    connect(m_balancer.data(), SIGNAL(finished(bool)),
+    connect(m_balancer, SIGNAL(finished(bool)),
             this, SIGNAL(finished(bool)));
 
-    connect(m_balancer.data(), SIGNAL(pendingChanged(bool)),
+    connect(m_balancer, SIGNAL(pendingChanged(bool)),
             this, SLOT(slotPendingChanged(bool)));
 
     connect(&m_idleTimer, SIGNAL(timeout()),
@@ -78,6 +74,7 @@ void Service::checkStatus()
 
 void Service::checkAllocation()
 {
+    qDebug() << Q_FUNC_INFO;
     if (!isPrivileged()) return;
     m_balancer->checkAllocation();
 }
@@ -86,18 +83,6 @@ void Service::startBalance()
 {
     if (!isPrivileged()) return;
     m_balancer->startBalance();
-}
-
-void Service::maintenance(int allocationThreshold,
-                          int batteryThreshold)
-{
-    if (!isPrivileged()) return;
-    Maintenance *maintenance = new Maintenance(m_balancer,
-                                               allocationThreshold,
-                                               batteryThreshold);
-    connect(maintenance, SIGNAL(finished()),
-            this, SLOT(slotMaintenanceFinished()));
-    maintenance->start();
 }
 
 bool Service::isPrivileged()
@@ -145,11 +130,6 @@ void Service::slotIdleTimerTriggered()
 {
     qDebug() << "Shutting down service" << DBUS_SERVICE;
     qApp->quit();
-}
-
-void Service::slotMaintenanceFinished()
-{
-    sender()->deleteLater();
 }
 
 

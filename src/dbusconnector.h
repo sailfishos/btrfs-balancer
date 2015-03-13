@@ -32,7 +32,6 @@
 
 #include <QDBusAbstractAdaptor>
 #include <QDBusContext>
-#include <QSharedPointer>
 #include <QTimer>
 
 class Service : public QDBusAbstractAdaptor
@@ -48,13 +47,6 @@ public slots:
     Q_NOREPLY void checkAllocation();
     Q_NOREPLY void startBalance();
 
-    /* Runs a maintenance operation, if the battery fill level is above the
-     * given threshold, and filesystem allocation is at least at the given
-     * allocation threshold.
-     */
-    Q_NOREPLY void maintenance(int allocationThreshold,
-                               int batteryThreshold);
-
 signals:
     void status(int status);
     void allocation(qlonglong size, qlonglong used);
@@ -68,11 +60,10 @@ private slots:
     void slotPendingChanged(bool pending);
     void slotStatusReceived(BtrfsBalancer::Status s);
     void slotIdleTimerTriggered();
-    void slotMaintenanceFinished();
 
 private:
     QDBusContext *m_context;
-    QSharedPointer<BtrfsBalancer> m_balancer;
+    BtrfsBalancer *m_balancer;
     QTimer m_idleTimer;
 };
 

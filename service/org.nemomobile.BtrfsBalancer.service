@@ -1,5 +1,5 @@
 [D-BUS Service]
 Interface=org.nemomobile.BtrfsBalancer
 Name=org.nemomobile.BtrfsBalancer
-Exec=/usr/sbin/btrfs-balancer
+Exec=/usr/sbin/btrfs-balancer server
 User=root
