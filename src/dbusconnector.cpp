@@ -50,6 +50,8 @@ Service::Service(QDBusContext *context, QObject *parent)
     m_balancer = new BtrfsBalancer(this);
     connect(m_balancer, SIGNAL(status(BtrfsBalancer::Status)),
             this, SLOT(slotStatusReceived(BtrfsBalancer::Status)));
+    connect(m_balancer, SIGNAL(lastBalanced(qlonglong)),
+            this, SIGNAL(lastBalanced(qlonglong)));
     connect(m_balancer, SIGNAL(allocation(qlonglong,qlonglong)),
             this, SIGNAL(allocation(qlonglong,qlonglong)));
     connect(m_balancer, SIGNAL(progress(int)),
@@ -70,6 +72,12 @@ void Service::checkStatus()
 {
     if (!isPrivileged()) return;
     m_balancer->checkStatus();
+}
+
+void Service::checkLastBalanced()
+{
+    if (!isPrivileged()) return;
+    m_balancer->checkLastBalanced();
 }
 
 void Service::checkAllocation()

@@ -28,6 +28,10 @@
 #include "btrfsbalancer.h"
 
 #include <qmath.h>
+#include <QDateTime>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QDebug>
 
 namespace
@@ -37,6 +41,28 @@ namespace
 // order of their application
 const QList<int> MAX_USAGE_PERCENTS =
         QList<int>() << 0 << 10 << 20 << 35 << 50 << 75 << 96;
+
+
+// path of the file for remembering the timestamp of the last successful
+// balancing operation
+const QString CACHE_DIR("/var/cache");
+const QString BALANCER_DIR("btrfs-balancer");
+const QString TIMESTAMP_FILE("last-success");
+
+void updateTimestamp()
+{
+    QDir cacheDir(CACHE_DIR);
+    if (!cacheDir.exists(BALANCER_DIR) && !cacheDir.mkdir(BALANCER_DIR)) {
+        qWarning() << "Could not create directory:"
+                   << cacheDir.filePath(BALANCER_DIR);
+        return;
+    }
+
+    if (!cacheDir.cd(BALANCER_DIR)
+            || !QFile(cacheDir.filePath(TIMESTAMP_FILE)).open(QFile::WriteOnly)) {
+        qWarning() << "Could not update timestamp file:" << TIMESTAMP_FILE;
+    }
+}
 
 }
 
@@ -53,13 +79,28 @@ void BtrfsBalancer::setStatus(Status newStatus)
         m_currentStatus = newStatus;
         emit status(newStatus);
     }
+
+    emit pendingChanged(newStatus != READY);
 }
 
 void BtrfsBalancer::checkStatus()
 {
-    emit pendingChanged(true);
     emit status(m_currentStatus);
-    emit pendingChanged(false);
+}
+
+void BtrfsBalancer::checkLastBalanced()
+{
+    QDir cacheDir(CACHE_DIR);
+    if (cacheDir.cd(BALANCER_DIR)) {
+        QFileInfo timeStampFile(cacheDir.absoluteFilePath(TIMESTAMP_FILE));
+        if (timeStampFile.exists()) {
+            emit lastBalanced(timeStampFile.lastModified().toMSecsSinceEpoch());
+        } else {
+            emit lastBalanced(0);
+        }
+    } else {
+        emit lastBalanced(0);
+    }
 }
 
 void BtrfsBalancer::checkAllocation()
@@ -73,7 +114,6 @@ void BtrfsBalancer::checkAllocation()
         btrfs->requestAllocation();
     } else {
         emit allocation(-1, -1);
-        emit pendingChanged(false);
     }
 }
 
@@ -102,6 +142,7 @@ void BtrfsBalancer::process()
         qDebug() << "Balancing finished";
         emit progress(100);
         emit finished(true);
+        updateTimestamp();
         setStatus(READY);
         emit pendingChanged(false);
     }
@@ -118,7 +159,7 @@ void BtrfsBalancer::slotReceivedAllocation(qint64 size, qint64 used)
         qDebug() << "Failed to determine filesystem allocation";
         emit allocation(-1, -1);
     }
-    emit pendingChanged(false);
+    emit pendingChanged(m_currentStatus != READY);
 }
 
 void BtrfsBalancer::slotBalanceProgress(int percents)

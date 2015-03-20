@@ -42,13 +42,13 @@ const QString BTRFS_PATH("/usr/sbin/btrfs");
 
 // path to the device-specific partition configuration (%1 being the device
 // model placeholder)
-const QString PARTITION_CONF("/usr/share/sailfish-snapshot/partition-%1.conf");
+const QString PARTITION_CONF("/usr/share/btrfs-balancer/btrfs-%1.conf");
 
 // system configuration key of partition
 const QString CONF_PARTITION("PARTITION");
 
-// mount point of the root partition that is to be balanced
-const QString ROOT_MOUNTPOINT("/");
+// system configuration key of root mountpoint
+const QString CONF_ROOT_MOUNTPOINT("ROOT");
 
 // regexp to retrieve size usage information from btrfs output
 const QRegExp RE_USAGE("size ([0-9.]+\\w+) used ([0-9.]+\\w+)");
@@ -109,7 +109,6 @@ void Btrfs::loadDeviceConfiguration()
             const QString key = QString::fromUtf8(line.left(pos)).trimmed();
             const QString value = QString::fromUtf8(line.mid(pos + 1)).trimmed();
             m_deviceConfiguration[key] = value;
-            qDebug() << "Configuration:" << key << "=" << value;
         }
     } else {
         qWarning() << "Unable to read partition configuration:"
@@ -147,6 +146,12 @@ void Btrfs::startBalance(int maxUsagePercent)
         return;
     }
 
+    if (!m_deviceConfiguration.contains(CONF_ROOT_MOUNTPOINT)) {
+        qCritical() << "Cannot get root path. No mountpoint configured.";
+        emit balanceFinished(false);
+        return;
+    }
+
     m_currentProcess = new QProcess;
     m_currentProcess->setProgram(BTRFS_PATH);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -156,7 +161,7 @@ void Btrfs::startBalance(int maxUsagePercent)
                                    << "balance"
                                    << "start"
                                    << QString("-dusage=%1").arg(maxUsagePercent)
-                                   << ROOT_MOUNTPOINT);
+                                   << m_deviceConfiguration.value(CONF_ROOT_MOUNTPOINT));
 
     connect(m_currentProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
             this, SLOT(slotBalanceFinished(int,QProcess::ExitStatus)));
@@ -176,7 +181,7 @@ int Btrfs::getBalanceProgress()
     process.setArguments(QStringList()
                          << "balance"
                          << "status"
-                         << ROOT_MOUNTPOINT);
+                         << m_deviceConfiguration.value(CONF_ROOT_MOUNTPOINT));
     process.start(QProcess::ReadOnly);
     process.waitForFinished(1000);
 

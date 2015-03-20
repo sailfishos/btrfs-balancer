@@ -50,6 +50,11 @@ public:
      */
     void checkStatus();
 
+    /* Checks the time of the last successful balancing operation.
+     * Emits the lastBalanced signal.
+     */
+    void checkLastBalanced();
+
     /* Checks the filesystem allocation.
      * Emits the allocation signal.
      */
@@ -64,6 +69,7 @@ public:
 signals:
     void pendingChanged(bool pending);
     void status(BtrfsBalancer::Status status);
+    void lastBalanced(qlonglong msecsSinceEpoch);
     void allocation(qlonglong size, qlonglong used);
     void progress(int percentage);
     void finished(bool success);

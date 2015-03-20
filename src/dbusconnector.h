@@ -44,11 +44,13 @@ public:
 
 public slots:
     Q_NOREPLY void checkStatus();
+    Q_NOREPLY void checkLastBalanced();
     Q_NOREPLY void checkAllocation();
     Q_NOREPLY void startBalance();
 
 signals:
     void status(int status);
+    void lastBalanced(qlonglong msecsSinceEpoch);
     void allocation(qlonglong size, qlonglong used);
     void progress(int);
     void finished(bool success);
