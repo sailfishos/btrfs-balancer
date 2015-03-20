@@ -11,11 +11,6 @@ It consists of roughly 2 parts:
 * systemd service files to run the btrfs-balancer maintenance method
   periodically.
 
-Install from source:
-  qmake
-  make
-  make install [DESTDIR=myrootfolder]
-
 Building RPM package with mb script:
 
   mb build -t <your target> rpm/btrfs-balancer.spec

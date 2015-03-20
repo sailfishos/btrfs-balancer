@@ -9,9 +9,10 @@ Source0:	%{name}-%{version}.tar.bz2
 
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
+BuildRequires:  pkgconfig(contextkit-statefs)
 BuildRequires:  pkgconfig(keepalive)
 BuildRequires:  ssu-devel >= 0.37.9
-Requires:	systemd
+Requires:       systemd
 
 %description
 %{summary}

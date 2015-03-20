@@ -9,7 +9,7 @@ LIBS += -lssu
 
 INSTALLS += target
 
-PKGCONFIG += keepalive
+PKGCONFIG += contextkit-statefs keepalive
 
 SOURCES += \
     main.cpp \

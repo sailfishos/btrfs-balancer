@@ -34,31 +34,23 @@
 #include <QDBusMessage>
 #include <QFile>
 
+#include <contextproperty.h>
+
 #include <iostream>
 
 namespace
 {
-const QString BATTERY_CHARGE("/run/state/namespaces/Battery/ChargePercentage");
-const QString BATTERY_STATUS("/run/state/namespaces/Battery/IsCharging");
+const QString BATTERY_CHARGE("Battery.ChargePercentage");
+const QString BATTERY_STATUS("Battery.IsCharging");
 
 int batteryCharge()
 {
-    QFile f(BATTERY_CHARGE);
-    if (f.open(QFile::ReadOnly)) {
-        return f.readAll().toInt();
-    } else {
-        return 0;
-    }
+    return ContextProperty(BATTERY_CHARGE).value(QVariant(0)).toInt();
 }
 
 bool isBatteryCharging()
 {
-    QFile f(BATTERY_STATUS);
-    if (f.open(QFile::ReadOnly)) {
-        return f.readAll().toInt() != 0;
-    } else {
-        return false;
-    }
+    return ContextProperty(BATTERY_STATUS).value(QVariant(false)).toBool();
 }
 
 }

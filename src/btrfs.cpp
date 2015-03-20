@@ -190,7 +190,7 @@ int Btrfs::getBalanceProgress()
         const QString line = process.readLine().trimmed();
         if (RE_PROGRESS.indexIn(line) != -1) {
             const QString progressString = RE_PROGRESS.cap(1);
-            int progress = progressString == "nan"
+            int progress = (progressString == "nan")
                     ? 0 // I guess that's 0 with bug in btrfs
                     : progressString.toInt();
             // btrfs balancing progress is going backwards, so invert it
