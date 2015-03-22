@@ -185,6 +185,7 @@ void BalanceCommand::slotBatteryStatusChanged(
 
     case BatteryMonitor::CHARGING:
         if (m_isWaitingForBatteryCheck) {
+            m_isWaitingForBatteryCheck = false;
             callService("checkStatus");
         }
         // the device may be discharging actually while charging, if the
@@ -194,6 +195,7 @@ void BalanceCommand::slotBatteryStatusChanged(
 
     case BatteryMonitor::DISCHARGING:
         if (m_isWaitingForBatteryCheck) {
+            m_isWaitingForBatteryCheck = false;
             if (level < m_batteryThreshold) {
                 std::cerr << "Cannot balance. Battery charge is too low. "
                           << "Please plug in charger and try again." << std::endl;
