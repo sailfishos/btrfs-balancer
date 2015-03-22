@@ -32,7 +32,6 @@
 namespace
 {
 const QString BATTERY_CHARGE("Battery.ChargePercentage");
-const QString BATTERY_STATUS("Battery.IsCharging");
 const QString BATTERY_STATE("Battery.State");
 }
 
