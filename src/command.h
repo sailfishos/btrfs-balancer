@@ -44,6 +44,7 @@ public:
         RESULT_ERROR,
         BATTERY_ERROR,
         SPACE_ERROR,
+        ABORTION_ERROR,
     };
 
     Command(QObject *parent = 0)

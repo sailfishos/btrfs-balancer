@@ -69,8 +69,16 @@ void updateTimestamp()
 BtrfsBalancer::BtrfsBalancer(QObject *parent)
     : QObject(parent)
     , m_currentStatus(READY)
+    , m_currentBtrfs(0)
 {
 
+}
+
+BtrfsBalancer::~BtrfsBalancer()
+{
+    if (m_currentBtrfs) {
+        delete m_currentBtrfs;
+    }
 }
 
 void BtrfsBalancer::setStatus(Status newStatus)
@@ -108,10 +116,10 @@ void BtrfsBalancer::checkAllocation()
     qDebug() << Q_FUNC_INFO;
     emit pendingChanged(true);
     if (m_currentStatus == READY) {
-        Btrfs* btrfs = new Btrfs;
-        connect(btrfs, SIGNAL(allocationReceived(qint64,qint64)),
+        m_currentBtrfs = new Btrfs;
+        connect(m_currentBtrfs, SIGNAL(allocationReceived(qint64,qint64)),
                 this, SLOT(slotReceivedAllocation(qint64,qint64)));
-        btrfs->requestAllocation();
+        m_currentBtrfs->requestAllocation();
     } else {
         emit allocation(-1, -1);
     }
@@ -131,12 +139,12 @@ void BtrfsBalancer::process()
         int usage = m_usageLevels.first();
 
         qDebug() << "Balancing..." << usage << "%";
-        Btrfs* btrfs = new Btrfs();
-        connect(btrfs, SIGNAL(balanceProgress(int)),
+        m_currentBtrfs = new Btrfs();
+        connect(m_currentBtrfs, SIGNAL(balanceProgress(int)),
                 this, SLOT(slotBalanceProgress(int)));
-        connect(btrfs, SIGNAL(balanceFinished(bool)),
+        connect(m_currentBtrfs, SIGNAL(balanceFinished(bool)),
                 this, SLOT(slotBalanceFinished(bool)));
-        btrfs->startBalance(usage);
+        m_currentBtrfs->startBalance(usage);
         emit progress(usage);
     } else {
         qDebug() << "Balancing finished";
@@ -151,6 +159,7 @@ void BtrfsBalancer::process()
 void BtrfsBalancer::slotReceivedAllocation(qint64 size, qint64 used)
 {
     sender()->deleteLater();
+    m_currentBtrfs = 0;
 
     if (size > 0) {
         qDebug() << used << "of" << size << "bytes used";
@@ -179,6 +188,7 @@ void BtrfsBalancer::slotBalanceProgress(int percents)
 void BtrfsBalancer::slotBalanceFinished(bool success)
 {
     sender()->deleteLater();
+    m_currentBtrfs = 0;
 
     if (success) {
         m_usageLevels.removeFirst();

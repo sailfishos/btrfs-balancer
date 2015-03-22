@@ -29,6 +29,7 @@
 #define BALANCECOMMAND_H
 
 #include "command.h"
+#include "batterymonitor.h"
 
 class BalanceCommand : public Command
 {
@@ -37,6 +38,7 @@ public:
     BalanceCommand(int batteryThreshold,
                    int allocationThreshold,
                    QObject *parent = 0);
+    virtual ~BalanceCommand();
 
 public slots:
     virtual void start();
@@ -52,10 +54,15 @@ private slots:
     void slotGotProgress(int percents);
     void slotFinished(bool successful);
 
+    void slotBatteryStatusChanged(BatteryMonitor::ChargerStatus chargerStatus,
+                                  int level);
+
 private:
     int m_allocationThreshold;
     int m_batteryThreshold;
+    bool m_isWaitingForBatteryCheck;
     bool m_isBalancing;
+    BatteryMonitor *m_batteryMonitor;
 
 };
 

@@ -93,6 +93,14 @@ void Service::startBalance()
     m_balancer->startBalance();
 }
 
+void Service::cancel()
+{
+    if (!isPrivileged()) return;
+    qDebug() << "Service" << DBUS_SERVICE << "is stopping on request.";
+    m_balancer->deleteLater();
+    qApp->quit();
+}
+
 bool Service::isPrivileged()
 {
     // courtesy of nemomobile/password-manager

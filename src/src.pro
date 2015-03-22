@@ -18,7 +18,8 @@ SOURCES += \
     btrfs.cpp \
     options.cpp \
     balancecommand.cpp \
-    allocationcommand.cpp
+    allocationcommand.cpp \
+    batterymonitor.cpp
 
 HEADERS += \
     dbusconnector.h \
@@ -28,4 +29,5 @@ HEADERS += \
     dbusservice.h \
     balancecommand.h \
     allocationcommand.h \
-    command.h
+    command.h \
+    batterymonitor.h

@@ -85,11 +85,28 @@ Btrfs::Btrfs(QObject *parent)
     : QObject(parent)
     , m_currentProcess(0)
     , m_currentProgress(0)
+    , m_isBalancing(false)
 {
     loadDeviceConfiguration();
 
     connect(&m_progressTimer, SIGNAL(timeout()),
             this, SLOT(slotBalanceProgress()));
+}
+
+Btrfs::~Btrfs()
+{
+    // if the process gets aborted unexpectedly, at least try to cancel the
+    // balancing
+    if (m_currentProcess
+            && m_isBalancing
+            && m_deviceConfiguration.contains(CONF_ROOT_MOUNTPOINT)) {
+        qWarning() << "Cancelling balancing operation.";
+        QProcess::execute(BTRFS_PATH,
+                          QStringList()
+                          << "balance"
+                          << "cancel"
+                          << m_deviceConfiguration.value(CONF_ROOT_MOUNTPOINT));
+    }
 }
 
 void Btrfs::loadDeviceConfiguration()
@@ -168,6 +185,7 @@ void Btrfs::startBalance(int maxUsagePercent)
     m_currentProcess->start(QProcess::ReadOnly);
 
     m_currentProgress = 0;
+    m_isBalancing = true;
     m_progressTimer.start(PROGRESS_TIMER_INTERVAL);
 }
 
@@ -243,6 +261,7 @@ void Btrfs::slotBalanceFinished(int exitCode, QProcess::ExitStatus status)
 
     m_currentProcess->deleteLater();
     m_currentProcess = 0;
+    m_isBalancing = false;
     m_progressTimer.stop();
 
     if (exitCode == 0) {

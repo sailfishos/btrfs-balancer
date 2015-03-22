@@ -36,6 +36,14 @@
 #include <QDebug>
 #include <backgroundactivity.h>
 
+#include <signal.h>
+
+void terminate(int unused)
+{
+    Q_UNUSED(unused);
+    qApp->exit(Command::ABORTION_ERROR);
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
@@ -71,5 +79,13 @@ int main(int argc, char *argv[])
     if (!command.isNull()) {
         QTimer::singleShot(0, command.data(), SLOT(start()));
     }
+
+    // install signal handler to terminate cleanly on Ctrl-C
+    struct sigaction intAction;
+    intAction.sa_handler = terminate;
+    sigemptyset(&intAction.sa_mask);
+    intAction.sa_flags |= SA_RESTART;
+    sigaction(SIGINT, &intAction, 0);
+
     return app.exec();
 }

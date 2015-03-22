@@ -25,48 +25,36 @@
 ****************************************************************************************/
 
 
-#ifndef BTRFS_H
-#define BTRFS_H
+#ifndef BATTERYMONITOR_H
+#define BATTERYMONITOR_H
 
-#include <QMap>
 #include <QObject>
-#include <QProcess>
-#include <QString>
-#include <QTimer>
 
-/* Asynchronous interface to some functionality of the btrfs system tool.
- */
-class Btrfs : public QObject
+class BatteryMonitor : public QObject
 {
     Q_OBJECT
 public:
-    explicit Btrfs(QObject *parent = 0);
-    virtual ~Btrfs();
+    enum ChargerStatus
+    {
+        PENDING, // ignore any charge changes in pending state
+        UNKNOWN,
+        CHARGING,
+        DISCHARGING,
+        CRITICAL,
+    };
 
-    void requestAllocation();
-    void startBalance(int maxUsagePercent);
-
+    explicit BatteryMonitor(QObject *parent = 0);
 
 signals:
-    void allocationReceived(qint64 size, qint64 used);
-    void balanceProgress(int percents);
-    void balanceFinished(bool success);
-
-private:
-    void loadDeviceConfiguration();
-    int getBalanceProgress();
+    void status(BatteryMonitor::ChargerStatus chargerStatus, int level);
 
 private slots:
-    void slotBalanceProgress();
-    void slotAllocationFinished(int exitCode, QProcess::ExitStatus status);
-    void slotBalanceFinished(int exitCode, QProcess::ExitStatus status);
+    void slotChargeChanged();
+    void slotStateChanged();
 
 private:
-    QProcess *m_currentProcess;
-    QMap<QString, QString> m_deviceConfiguration;
-    QTimer m_progressTimer;
-    int m_currentProgress;
-    bool m_isBalancing;
+    int m_currentCharge;
+    ChargerStatus m_currentStatus;
 };
 
-#endif // BTRFS_H
+#endif // BATTERYMONITOR_H

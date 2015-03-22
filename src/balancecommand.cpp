@@ -34,26 +34,7 @@
 #include <QDBusMessage>
 #include <QFile>
 
-#include <contextproperty.h>
-
 #include <iostream>
-
-namespace
-{
-const QString BATTERY_CHARGE("Battery.ChargePercentage");
-const QString BATTERY_STATUS("Battery.IsCharging");
-
-int batteryCharge()
-{
-    return ContextProperty(BATTERY_CHARGE).value(QVariant(0)).toInt();
-}
-
-bool isBatteryCharging()
-{
-    return ContextProperty(BATTERY_STATUS).value(QVariant(false)).toBool();
-}
-
-}
 
 BalanceCommand::BalanceCommand(int batteryThreshold,
                                int allocationThreshold,
@@ -61,7 +42,9 @@ BalanceCommand::BalanceCommand(int batteryThreshold,
     : Command(parent)
     , m_allocationThreshold(allocationThreshold)
     , m_batteryThreshold(batteryThreshold)
+    , m_isWaitingForBatteryCheck(true)
     , m_isBalancing(false)
+    , m_batteryMonitor(0)
 {
     QDBusConnection bus = QDBusConnection::systemBus();
 
@@ -94,15 +77,22 @@ BalanceCommand::BalanceCommand(int batteryThreshold,
                 SLOT(slotFinished(bool)));
 }
 
+BalanceCommand::~BalanceCommand()
+{
+    QDBusMessage methodCall = QDBusMessage::createMethodCall(DBUS_SERVICE,
+                                                             DBUS_PATH,
+                                                             DBUS_INTERFACE,
+                                                             "cancel");
+    // this call must be blocking to be guaranteed to get still executed
+    // before quitting
+    QDBusConnection::systemBus().call(methodCall);
+}
+
 void BalanceCommand::start()
 {
-    if (!isBatteryCharging() && batteryCharge() < m_batteryThreshold) {
-        std::cerr << "Cannot balance. Battery charge is too low. "
-                  << "Please plug in charger and try again." << std::endl;
-        failure(Command::BATTERY_ERROR);
-    } else {
-        callService("checkStatus");
-    }
+    m_batteryMonitor = new BatteryMonitor(this);
+    connect(m_batteryMonitor, SIGNAL(status(BatteryMonitor::ChargerStatus,int)),
+            this, SLOT(slotBatteryStatusChanged(BatteryMonitor::ChargerStatus,int)));
 }
 
 void BalanceCommand::callService(const QString &methodName)
@@ -176,5 +166,42 @@ void BalanceCommand::slotFinished(bool successful)
     } else {
         std::cerr << "Failed. Please free up more space and try again." << std::endl;
         failure(Command::SPACE_ERROR);
+    }
+}
+
+void BalanceCommand::slotBatteryStatusChanged(
+        BatteryMonitor::ChargerStatus chargerStatus, int level)
+{
+    switch (chargerStatus) {
+    case BatteryMonitor::UNKNOWN:
+        std::cerr << "Failed to read battery status." << std::endl;
+        failure(Command::BATTERY_ERROR);
+        break;
+
+    case BatteryMonitor::CRITICAL:
+        std::cerr << "Battery charge reached a critical value." << std::endl;
+        failure(Command::BATTERY_ERROR);
+        break;
+
+    case BatteryMonitor::CHARGING:
+        if (m_isWaitingForBatteryCheck) {
+            callService("checkStatus");
+        }
+        // the device may be discharging actually while charging, if the
+        // charger is weak and the power consumption is high, but that's fine
+        // here until a critical battery level is reached
+        break;
+
+    case BatteryMonitor::DISCHARGING:
+        if (m_isWaitingForBatteryCheck) {
+            if (level < m_batteryThreshold) {
+                std::cerr << "Cannot balance. Battery charge is too low. "
+                          << "Please plug in charger and try again." << std::endl;
+                failure(Command::BATTERY_ERROR);
+            } else {
+                callService("checkStatus");
+            }
+        }
+        break;
     }
 }

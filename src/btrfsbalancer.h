@@ -44,6 +44,7 @@ public:
     };
 
     explicit BtrfsBalancer(QObject *parent = 0);
+    virtual ~BtrfsBalancer();
 
     /* Checks the status of the balancer.
      * Emits the status signal.
@@ -85,6 +86,7 @@ private slots:
 
 private:
     Status m_currentStatus;
+    Btrfs *m_currentBtrfs;
     QList<int> m_usageLevels;
 };
 
