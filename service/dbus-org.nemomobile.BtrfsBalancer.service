@@ -5,3 +5,4 @@ Description=btrfs balancing D-Bus service
 Type=dbus
 BusName=org.nemomobile.BtrfsBalancer
 ExecStart=/usr/sbin/btrfs-balancer server
+After=local-fs.target
