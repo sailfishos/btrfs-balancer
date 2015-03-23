@@ -36,6 +36,13 @@
 
 #include <iostream>
 
+namespace
+{
+// timeout in ms to allow for D-Bus auto-activation before assuming the service
+// does not exist
+const int DBUS_TIMEOUT = 10000;
+}
+
 BalanceCommand::BalanceCommand(int batteryThreshold,
                                int allocationThreshold,
                                QObject *parent)
@@ -105,7 +112,7 @@ void BalanceCommand::callService(const QString &methodName)
                                                   this,
                                                   SLOT(slotDBusCallSuccess()),
                                                   SLOT(slotDBusCallError()),
-                                                  1000);
+                                                  DBUS_TIMEOUT);
 }
 
 void BalanceCommand::slotDBusCallError()

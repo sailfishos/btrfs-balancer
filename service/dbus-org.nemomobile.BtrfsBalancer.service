@@ -1,0 +1,7 @@
+[Unit]
+Description=btrfs balancing D-Bus service
+
+[Service]
+Type=dbus
+BusName=org.nemomobile.BtrfsBalancer
+ExecStart=/usr/sbin/btrfs-balancer server

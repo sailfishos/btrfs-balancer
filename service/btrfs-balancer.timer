@@ -1,5 +1,5 @@
 [Unit]
-Description=Run btrfs balance periodically
+Description=Run btrfs maintenance balancing periodically
 
 [Timer]
 OnCalendar=Tue, 3:00
