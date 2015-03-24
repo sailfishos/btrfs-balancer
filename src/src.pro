@@ -5,8 +5,6 @@ target.path = /usr/sbin
 QT = core dbus
 CONFIG += console link_pkgconfig
 
-LIBS += -lssu
-
 INSTALLS += target
 
 PKGCONFIG += contextkit-statefs keepalive

@@ -32,17 +32,13 @@
 #include <QRegExp>
 #include <QDebug>
 
-// libssu
-#include <ssudeviceinfo.h>
-
 namespace
 {
 // path of the btrfs tool
 const QString BTRFS_PATH("/usr/sbin/btrfs");
 
-// path to the device-specific partition configuration (%1 being the device
-// model placeholder)
-const QString PARTITION_CONF("/usr/share/btrfs-balancer/btrfs-%1.conf");
+// path to the device-specific partition configuration
+const QString PARTITION_CONF("/usr/share/btrfs-balancer/btrfs-balancer.conf");
 
 // system configuration key of partition
 const QString CONF_PARTITION("PARTITION");
@@ -113,8 +109,7 @@ void Btrfs::loadDeviceConfiguration()
 {
     m_deviceConfiguration.clear();
 
-    const QString model = SsuDeviceInfo().deviceModel().toLower();
-    QFile configFile(PARTITION_CONF.arg(model));
+    QFile configFile(PARTITION_CONF);
     if (configFile.exists() && configFile.open(QIODevice::ReadOnly)) {
         while (!configFile.atEnd()) {
             const QByteArray line = configFile.readLine();
@@ -129,7 +124,7 @@ void Btrfs::loadDeviceConfiguration()
         }
     } else {
         qWarning() << "Unable to read partition configuration:"
-                   << PARTITION_CONF.arg(model);
+                   << PARTITION_CONF;
     }
 }
 

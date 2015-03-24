@@ -11,8 +11,8 @@ BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(contextkit-statefs)
 BuildRequires:  pkgconfig(keepalive)
-BuildRequires:  ssu-devel >= 0.37.9
 Requires:       systemd
+Requires:       btrfs-balancer-configs
 
 %description
 %{summary}
@@ -34,14 +34,4 @@ rm -rf %{buildroot}
 /usr/share/dbus-1/system-services/*
 /lib/systemd/system/*
 %{_sbindir}/*
-
-%package sbj-config
-Summary: %{summary} (SbJ configuration)
-Requires: %{name} = %{version}
-
-%description sbj-config
-%{summary}.
-
-%files sbj-config
-%attr(644,root,root) %{_datadir}/%{name}/btrfs-sbj.conf
 
