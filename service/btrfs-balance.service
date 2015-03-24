@@ -1,9 +1,9 @@
 [Unit]
-Description=btrfs balance service
+Description=btrfs maintenance balancing
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/keepalive-tool /usr/sbin/btrfs-balance
+ExecStart=/usr/sbin/btrfs-balancer balance -b 50 -a 75
 
 [Install]
 WantedBy=btrfs-balancer.timer
