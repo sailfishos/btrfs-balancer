@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS = src \
-          service
+          service \
+          example
 

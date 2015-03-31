@@ -35,3 +35,14 @@ rm -rf %{buildroot}
 /lib/systemd/system/*
 %{_sbindir}/*
 
+%package config-example
+Summary: Sample device configuration data
+Group: System/Base
+Provides: btrfs-balancer-configs
+
+%description config-example
+%{summary}. A device maker needs to install their device-specific configuration file.
+
+%files config-example
+%defattr(-,root,root,-)
+/usr/share/btrfs-balancer/btrfs-balancer.conf
