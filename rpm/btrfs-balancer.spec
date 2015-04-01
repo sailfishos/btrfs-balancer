@@ -13,6 +13,7 @@ BuildRequires:  pkgconfig(contextkit-statefs)
 BuildRequires:  pkgconfig(keepalive)
 Requires:       systemd
 Requires:       btrfs-balancer-configs
+Requires:       util-linux
 
 %description
 %{summary}
