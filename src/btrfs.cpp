@@ -34,6 +34,9 @@
 
 namespace
 {
+// path of the ionice tool
+const QString IONICE_PATH("/usr/bin/ionice");
+
 // path of the btrfs tool
 const QString BTRFS_PATH("/usr/sbin/btrfs");
 
@@ -165,11 +168,14 @@ void Btrfs::startBalance(int maxUsagePercent)
     }
 
     m_currentProcess = new QProcess;
-    m_currentProcess->setProgram(BTRFS_PATH);
+    m_currentProcess->setProgram(IONICE_PATH);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("LANG", "C");
     m_currentProcess->setProcessEnvironment(env);
     m_currentProcess->setArguments(QStringList()
+                                   << "-c"
+                                   << "3"
+                                   << BTRFS_PATH
                                    << "balance"
                                    << "start"
                                    << QString("-dusage=%1").arg(maxUsagePercent)

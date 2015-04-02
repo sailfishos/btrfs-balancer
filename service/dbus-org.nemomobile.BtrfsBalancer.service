@@ -6,3 +6,4 @@ After=local-fs.target
 Type=dbus
 BusName=org.nemomobile.BtrfsBalancer
 ExecStart=/usr/sbin/btrfs-balancer server
+OOMScoreAdjust=-250

@@ -1,6 +1,6 @@
 Name:		btrfs-balancer
 Summary:	Automatic balancing service for btrfs filesystem
-Version:	1.2.0
+Version:	1.2.2
 Release:	1
 Group:		System/Filesystems
 License:	BSD
@@ -13,6 +13,7 @@ BuildRequires:  pkgconfig(contextkit-statefs)
 BuildRequires:  pkgconfig(keepalive)
 Requires:       systemd
 Requires:       btrfs-balancer-configs
+Requires:       util-linux
 
 %description
 %{summary}
