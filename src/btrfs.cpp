@@ -275,7 +275,6 @@ void Btrfs::slotBalanceFinished(int exitCode, QProcess::ExitStatus status)
     if (exitCode == 0) {
         m_isBalanced = true;
         requestAllocation();
-        //emit balanceFinished(true);
     } else {
         emit balanceFinished(false, 0, 0);
     }
