@@ -87,10 +87,10 @@ void Service::checkAllocation()
     m_balancer->checkAllocation();
 }
 
-void Service::startBalance()
+void Service::startBalance(int allocationGoal)
 {
     if (!isPrivileged()) return;
-    m_balancer->startBalance();
+    m_balancer->startBalance(allocationGoal);
 }
 
 void Service::cancel()

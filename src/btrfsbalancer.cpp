@@ -70,6 +70,7 @@ BtrfsBalancer::BtrfsBalancer(QObject *parent)
     : QObject(parent)
     , m_currentStatus(READY)
     , m_currentBtrfs(0)
+    , m_allocationGoal(0)
 {
 
 }
@@ -125,10 +126,11 @@ void BtrfsBalancer::checkAllocation()
     }
 }
 
-void BtrfsBalancer::startBalance()
+void BtrfsBalancer::startBalance(int allocationGoal)
 {
     emit pendingChanged(true);
     m_usageLevels = MAX_USAGE_PERCENTS;
+    m_allocationGoal = allocationGoal;
     setStatus(BALANCING);
     process();
 }
@@ -142,8 +144,8 @@ void BtrfsBalancer::process()
         m_currentBtrfs = new Btrfs();
         connect(m_currentBtrfs, SIGNAL(balanceProgress(int)),
                 this, SLOT(slotBalanceProgress(int)));
-        connect(m_currentBtrfs, SIGNAL(balanceFinished(bool)),
-                this, SLOT(slotBalanceFinished(bool)));
+        connect(m_currentBtrfs, SIGNAL(balanceFinished(bool,qint64,qint64)),
+                this, SLOT(slotBalanceFinished(bool,qint64,qint64)));
         m_currentBtrfs->startBalance(usage);
         emit progress(usage);
     } else {
@@ -185,13 +187,19 @@ void BtrfsBalancer::slotBalanceProgress(int percents)
     emit progress(qFloor(currentUsage + subProgress));
 }
 
-void BtrfsBalancer::slotBalanceFinished(bool success)
+void BtrfsBalancer::slotBalanceFinished(bool success, qint64 size, qint64 used)
 {
     sender()->deleteLater();
     m_currentBtrfs = 0;
 
     if (success) {
-        m_usageLevels.removeFirst();
+        int percentage = static_cast<int>(used * 100 / size);
+        if (percentage <= m_allocationGoal) {
+            // goal reached; all done
+            m_usageLevels.clear();
+        } else {
+            m_usageLevels.removeFirst();
+        }
         process();
     } else {
         qWarning() << "Balancing failed.";

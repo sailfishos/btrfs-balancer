@@ -46,7 +46,7 @@ public slots:
     Q_NOREPLY void checkStatus();
     Q_NOREPLY void checkLastBalanced();
     Q_NOREPLY void checkAllocation();
-    Q_NOREPLY void startBalance();
+    Q_NOREPLY void startBalance(int allocationGoal = 0);
     Q_NOREPLY void cancel();
 
 signals:

@@ -50,7 +50,7 @@ public:
 signals:
     void allocationReceived(qint64 size, qint64 used);
     void balanceProgress(int percents);
-    void balanceFinished(bool success);
+    void balanceFinished(bool success, qint64 size, qint64 used);
 
 private:
     void loadDeviceConfiguration();
@@ -67,6 +67,7 @@ private:
     QTimer m_progressTimer;
     int m_currentProgress;
     bool m_isBalancing;
+    bool m_isBalanced;
 };
 
 #endif // BTRFS_H
