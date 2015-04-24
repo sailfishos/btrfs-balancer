@@ -31,6 +31,9 @@
 #include "command.h"
 #include "batterymonitor.h"
 
+#include <QList>
+#include <QVariant>
+
 class BalanceCommand : public Command
 {
     Q_OBJECT
@@ -44,7 +47,8 @@ public slots:
     virtual void start();
 
 private:
-    void callService(const QString &methodName);
+    void callService(const QString &methodName,
+                     const QList<QVariant> &arguments = QList<QVariant>());
 
 private slots:
     void slotDBusCallSuccess() { /* not of interest */ }

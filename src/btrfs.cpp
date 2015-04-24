@@ -85,6 +85,7 @@ Btrfs::Btrfs(QObject *parent)
     , m_currentProcess(0)
     , m_currentProgress(0)
     , m_isBalancing(false)
+    , m_isBalanced(false)
 {
     loadDeviceConfiguration();
 
@@ -157,13 +158,13 @@ void Btrfs::requestAllocation()
 void Btrfs::startBalance(int maxUsagePercent)
 {
     if (m_currentProcess) {
-        emit balanceFinished(false);
+        emit balanceFinished(false, 0, 0);
         return;
     }
 
     if (!m_deviceConfiguration.contains(CONF_ROOT_MOUNTPOINT)) {
         qCritical() << "Cannot get root path. No mountpoint configured.";
-        emit balanceFinished(false);
+        emit balanceFinished(false, 0, 0);
         return;
     }
 
@@ -202,7 +203,7 @@ int Btrfs::getBalanceProgress()
                          << "status"
                          << m_deviceConfiguration.value(CONF_ROOT_MOUNTPOINT));
     process.start(QProcess::ReadOnly);
-    process.waitForFinished(1000);
+    process.waitForFinished();
 
     // don't care about the exit code... it is not 0 for success
     while (!process.atEnd()) {
@@ -217,13 +218,15 @@ int Btrfs::getBalanceProgress()
         }
     }
     // could not determine progress
+    qWarning() << "Could not read btrfs balancing progress."
+               << "Don't worry, this may happen while btrfs is very busy.";
     return -1;
 }
 
 void Btrfs::slotBalanceProgress()
 {
     int progress = getBalanceProgress();
-    if (progress != m_currentProgress && progress != -1) {
+    if (progress > m_currentProgress && progress != -1) {
         m_currentProgress = progress;
         emit balanceProgress(progress);
     }
@@ -253,7 +256,11 @@ void Btrfs::slotAllocationFinished(int exitCode, QProcess::ExitStatus status)
     m_currentProcess->deleteLater();
     m_currentProcess = 0;
 
-    emit allocationReceived(size, used);
+    if (m_isBalanced) {
+        emit balanceFinished(true, size, used);
+    } else {
+        emit allocationReceived(size, used);
+    }
 }
 
 void Btrfs::slotBalanceFinished(int exitCode, QProcess::ExitStatus status)
@@ -266,8 +273,9 @@ void Btrfs::slotBalanceFinished(int exitCode, QProcess::ExitStatus status)
     m_progressTimer.stop();
 
     if (exitCode == 0) {
-        emit balanceFinished(true);
+        m_isBalanced = true;
+        requestAllocation();
     } else {
-        emit balanceFinished(false);
+        emit balanceFinished(false, 0, 0);
     }
 }

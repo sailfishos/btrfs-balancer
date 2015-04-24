@@ -65,7 +65,7 @@ public:
      * Emits finished signal after success or failure.
      * Emits progress signals inbetween.
      */
-    void startBalance();
+    void startBalance(int allocationGoal);
 
 signals:
     void pendingChanged(bool pending);
@@ -82,12 +82,14 @@ private:
 private slots:
     void slotReceivedAllocation(qint64 size, qint64 used);
     void slotBalanceProgress(int percents);
-    void slotBalanceFinished(bool success);
+    void slotBalanceFinished(bool success, qint64 size, qint64 used);
 
 private:
     Status m_currentStatus;
     Btrfs *m_currentBtrfs;
     QList<int> m_usageLevels;
+    // we stop balancing if we reach the allocation percentage goal
+    int m_allocationGoal;
 };
 
 #endif // BTRFSBALANCER_H

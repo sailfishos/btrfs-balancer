@@ -86,13 +86,15 @@ BalanceCommand::BalanceCommand(int batteryThreshold,
 
 BalanceCommand::~BalanceCommand()
 {
-    QDBusMessage methodCall = QDBusMessage::createMethodCall(DBUS_SERVICE,
-                                                             DBUS_PATH,
-                                                             DBUS_INTERFACE,
-                                                             "cancel");
-    // this call must be blocking to be guaranteed to get still executed
-    // before quitting
-    QDBusConnection::systemBus().call(methodCall);
+    if (m_isBalancing) {
+        QDBusMessage methodCall = QDBusMessage::createMethodCall(DBUS_SERVICE,
+                                                                 DBUS_PATH,
+                                                                 DBUS_INTERFACE,
+                                                                 "cancel");
+        // this call must be blocking to be guaranteed to get still executed
+        // before quitting
+        QDBusConnection::systemBus().call(methodCall);
+    }
 }
 
 void BalanceCommand::start()
@@ -102,12 +104,16 @@ void BalanceCommand::start()
             this, SLOT(slotBatteryStatusChanged(BatteryMonitor::ChargerStatus,int)));
 }
 
-void BalanceCommand::callService(const QString &methodName)
+void BalanceCommand::callService(const QString &methodName,
+                                 const QList<QVariant> &arguments)
 {
     QDBusMessage methodCall = QDBusMessage::createMethodCall(DBUS_SERVICE,
                                                              DBUS_PATH,
                                                              DBUS_INTERFACE,
                                                              methodName);
+    if (arguments.size()) {
+        methodCall.setArguments(arguments);
+    }
     QDBusConnection::systemBus().callWithCallback(methodCall,
                                                   this,
                                                   SLOT(slotDBusCallSuccess()),
@@ -148,7 +154,8 @@ void BalanceCommand::slotGotAllocation(qlonglong size, qlonglong used)
         int percentage = static_cast<int>(used * 100 / size);
         if (percentage >= m_allocationThreshold) {
             m_isBalancing = true;
-            callService("startBalance");
+            callService("startBalance",
+                        QList<QVariant>() << m_allocationThreshold);
         } else {
             std::cout << "No balancing required. "
                       << percentage << " % allocated." << std::endl;

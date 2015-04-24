@@ -52,7 +52,8 @@ Options::Options(const QStringList &arguments)
                                         QString::number(DEFAULT_BATTERY_THRESHOLD));
     parser.addOption(batteryThreshold);
     QCommandLineOption allocationThreshold("a",
-                                           "Required filesystem allocation threshold for balancing (0 - 100).",
+                                           "Required filesystem allocation threshold for balancing (0 - 100). "
+                                           "If given, balancing will stop once the threshold has been reached.",
                                            "allocation threshold",
                                            QString::number(DEFAULT_ALLOCATION_TRESHOLD));
     parser.addOption(allocationThreshold);
