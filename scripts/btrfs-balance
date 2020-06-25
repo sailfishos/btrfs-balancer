@@ -43,6 +43,23 @@ get_used()
 			'BEGIN {printf "%d\n", rawuse * 100 / maxuse}')
 }
 
+get_battery_level()
+{
+	local res=$(busctl call com.nokia.mce /com/nokia/mce/request com.nokia.mce.request get_battery_level)
+	# 'i 42' -> '42'
+	res=${res#i }
+	echo ${res:-0}
+}
+
+get_charger_state()
+{
+	local res=$(busctl call com.nokia.mce /com/nokia/mce/request com.nokia.mce.request get_charger_state)
+	# 's "on"' -> 'on'
+	res=${res//\"/}
+	res=${res#s }
+	echo ${res:-unknown}
+}
+
 check_balance_need()
 {
 	get_used
@@ -54,10 +71,10 @@ check_balance_need()
 		return 0
 	fi
 
-	CHARGE_NOW=$(cat /run/state/namespaces/Battery/ChargePercentage)
-	IS_CHARGING=$(cat /run/state/namespaces/Battery/IsCharging)
+	CHARGE_NOW=$(get_battery_level)
+	CHARGER_STATE=$(get_charger_state)
 
-	if test "$CHARGE_NOW" -lt "$CHARGE_THRESHOLD" && test "$IS_CHARGING" -eq 0; then
+	if test "$CHARGE_NOW" -lt "$CHARGE_THRESHOLD" && test "$CHARGER_STATE" != "on"; then
 		echo "Cannot balance, battery charge is too low. Please, plug in charger" >&2
 		exit 1
 	fi
