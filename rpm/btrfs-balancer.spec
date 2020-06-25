@@ -1,6 +1,6 @@
 Name:		btrfs-balancer
 Summary:	Automatic balancing service for btrfs filesystem
-Version:	1.2.2
+Version:	1.2.5
 Release:	1
 Group:		System/Filesystems
 License:	BSD
