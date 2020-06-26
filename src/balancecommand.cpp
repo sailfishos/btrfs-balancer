@@ -1,6 +1,6 @@
 /****************************************************************************************
 **
-** Copyright (C) 2015 Jolla Ltd.
+** Copyright (c) 2015 - 2020 Jolla Ltd.
 ** Contact: Martin Grimme <martin.grimme@gmail.com>
 ** All rights reserved.
 **
@@ -23,7 +23,6 @@
 ** Lesser General Public License for more details.
 **
 ****************************************************************************************/
-
 
 #include "balancecommand.h"
 #include "btrfsbalancer.h"
@@ -187,6 +186,9 @@ void BalanceCommand::slotBatteryStatusChanged(
         BatteryMonitor::ChargerStatus chargerStatus, int level)
 {
     switch (chargerStatus) {
+    case BatteryMonitor::PENDING:
+        // nop
+        break;
     case BatteryMonitor::UNKNOWN:
         std::cerr << "Failed to read battery status." << std::endl;
         failure(Command::BATTERY_ERROR);
@@ -208,7 +210,7 @@ void BalanceCommand::slotBatteryStatusChanged(
         break;
 
     case BatteryMonitor::DISCHARGING:
-        if (m_isWaitingForBatteryCheck) {
+        if (m_isWaitingForBatteryCheck && level >= 0) {
             m_isWaitingForBatteryCheck = false;
             if (level < m_batteryThreshold) {
                 std::cerr << "Cannot balance. Battery charge is too low. "

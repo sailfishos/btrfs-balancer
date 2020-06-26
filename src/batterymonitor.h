@@ -1,6 +1,6 @@
 /****************************************************************************************
 **
-** Copyright (C) 2015 Jolla Ltd.
+** Copyright (c) 2015 - 2020 Jolla Ltd.
 ** Contact: Martin Grimme <martin.grimme@gmail.com>
 ** All rights reserved.
 **
@@ -24,11 +24,12 @@
 **
 ****************************************************************************************/
 
-
 #ifndef BATTERYMONITOR_H
 #define BATTERYMONITOR_H
 
 #include <QObject>
+
+#include <batterystatus.h>
 
 class BatteryMonitor : public QObject
 {
@@ -45,14 +46,21 @@ public:
 
     explicit BatteryMonitor(QObject *parent = 0);
 
-signals:
+Q_SIGNALS:
     void status(BatteryMonitor::ChargerStatus chargerStatus, int level);
 
-private slots:
-    void slotChargeChanged();
-    void slotStateChanged();
+private Q_SLOTS:
+
+    void onChargerStatusChanged(BatteryStatus::ChargerStatus chargerStatus);
+    void onBatteryStatusChanged(BatteryStatus::Status batteryStatus);
+    void onChargePercentageChanged(int chargePercentage);
 
 private:
+    void updateStatus();
+
+    BatteryStatus *m_batteryStatusTracker;
+    BatteryStatus::ChargerStatus m_chargerStatus;
+    BatteryStatus::Status m_batteryStatus;
     int m_currentCharge;
     ChargerStatus m_currentStatus;
 };

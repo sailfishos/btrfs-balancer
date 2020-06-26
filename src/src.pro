@@ -7,7 +7,7 @@ CONFIG += console link_pkgconfig
 
 INSTALLS += target
 
-PKGCONFIG += contextkit-statefs keepalive
+PKGCONFIG += systemsettings keepalive
 
 SOURCES += \
     main.cpp \
