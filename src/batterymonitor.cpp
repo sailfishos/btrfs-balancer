@@ -1,6 +1,6 @@
 /****************************************************************************************
 **
-** Copyright (C) 2015 Jolla Ltd.
+** Copyright (c) 2015 - 2020 Jolla Ltd.
 ** Contact: Martin Grimme <martin.grimme@gmail.com>
 ** All rights reserved.
 **
@@ -24,63 +24,74 @@
 **
 ****************************************************************************************/
 
-
 #include "batterymonitor.h"
-
-#include <contextproperty.h>
-
-namespace
-{
-const QString BATTERY_CHARGE("Battery.ChargePercentage");
-const QString BATTERY_STATE("Battery.State");
-}
 
 BatteryMonitor::BatteryMonitor(QObject *parent)
     : QObject(parent)
+    , m_batteryStatusTracker(new BatteryStatus(this))
+    , m_chargerStatus(BatteryStatus::ChargerStatusUnknown)
+    , m_batteryStatus(BatteryStatus::BatteryStatusUnknown)
     , m_currentCharge(-1) // charge is -1 while pending and to be ignored
     , m_currentStatus(PENDING)
 {
-    ContextProperty *chargeProperty = new ContextProperty(BATTERY_CHARGE, this);
-    ContextProperty *stateProperty = new ContextProperty(BATTERY_STATE, this);
-
-    connect(chargeProperty, SIGNAL(valueChanged()),
-            this, SLOT(slotChargeChanged()));
-    connect(stateProperty, SIGNAL(valueChanged()),
-            this, SLOT(slotStateChanged()));
+    connect(m_batteryStatusTracker, &BatteryStatus::chargerStatusChanged,
+            this, &BatteryMonitor::onChargerStatusChanged);
+    connect(m_batteryStatusTracker, &BatteryStatus::statusChanged,
+            this, &BatteryMonitor::onBatteryStatusChanged);
+    connect(m_batteryStatusTracker, &BatteryStatus::chargePercentageChanged,
+            this, &BatteryMonitor::onChargePercentageChanged);
 }
 
-void BatteryMonitor::slotChargeChanged()
+void BatteryMonitor::onChargerStatusChanged(BatteryStatus::ChargerStatus chargerStatus)
 {
-    ContextProperty* prop = qobject_cast<ContextProperty*>(sender());
-    if (prop) {
-        m_currentCharge = prop->value(QVariant(0)).toInt();
-
-        if (m_currentStatus != PENDING) {
-            emit status(m_currentStatus, m_currentCharge);
-        }
+    if (m_chargerStatus != chargerStatus) {
+        m_chargerStatus = chargerStatus;
+        updateStatus();
     }
 }
 
-void BatteryMonitor::slotStateChanged()
+void BatteryMonitor::onBatteryStatusChanged(BatteryStatus::Status batteryStatus)
 {
-    ContextProperty* prop = qobject_cast<ContextProperty*>(sender());
-    if (prop) {
-        const QString value = prop->value(QVariant("unknown")).toString();
+    if (m_batteryStatus != batteryStatus) {
+        m_batteryStatus = batteryStatus;
+        updateStatus();
+    }
+}
 
-        if (value == "charging") {
-            m_currentStatus = CHARGING;
-        } else if (value == "discharging") {
-            m_currentStatus = DISCHARGING;
-        } else if (value == "full") {
-            m_currentStatus = DISCHARGING; // no difference for this use case
-        } else if (value == "low" || value == "empty") {
-            m_currentStatus = CRITICAL;
-        } else {  // unknown
-            m_currentStatus = UNKNOWN;
-        }
+void BatteryMonitor::onChargePercentageChanged(int chargePercentage)
+{
+    if (m_currentCharge != chargePercentage) {
+        m_currentCharge = chargePercentage;
+        updateStatus();
+    }
+}
 
-        if (m_currentCharge != -1) {
-            emit status(m_currentStatus, m_currentCharge);
+void BatteryMonitor::updateStatus()
+{
+    ChargerStatus updatedStatus = m_currentStatus;
+
+    switch (m_batteryStatus) {
+    case BatteryStatus::Low:
+    case BatteryStatus::Empty:
+        updatedStatus = CRITICAL;
+        break;
+    default:
+        switch (m_chargerStatus) {
+        case BatteryStatus::Connected:
+            updatedStatus = CHARGING;
+            break;
+        case BatteryStatus::Disconnected:
+            updatedStatus = DISCHARGING;
+            break;
+        default:
+            if (m_currentStatus != PENDING)
+                updatedStatus = UNKNOWN;
+            break;
         }
+    }
+
+    if (updatedStatus != PENDING) {
+        m_currentStatus = updatedStatus;
+        emit status(m_currentStatus, m_currentCharge);
     }
 }
