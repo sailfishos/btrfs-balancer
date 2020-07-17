@@ -19,6 +19,6 @@ service.path = /usr/share/dbus-1/system-services
 systemd.files = btrfs-balance.service \
                 btrfs-balancer.timer \
                 dbus-org.nemomobile.BtrfsBalancer.service
-systemd.path = /lib/systemd/system
+systemd.path = /usr/lib/systemd/system
 
 INSTALLS += policy service systemd
