@@ -10,7 +10,7 @@ BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(systemsettings) >= 0.2.25
 BuildRequires:  pkgconfig(keepalive)
-BuildRequires:  systemd
+BuildRequires:  pkgconfig(systemd)
 Requires:       systemd
 Requires:       btrfs-balancer-configs
 Requires:       util-linux
