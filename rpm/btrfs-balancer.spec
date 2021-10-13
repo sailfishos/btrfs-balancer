@@ -1,6 +1,6 @@
 Name:		btrfs-balancer
 Summary:	Automatic balancing service for btrfs filesystem
-Version:	1.2.6
+Version:	1.2.8
 Release:	1
 License:	BSD
 URL:		https://github.com/sailfishos/btrfs-balancer
