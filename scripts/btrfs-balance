@@ -55,7 +55,7 @@ get_charger_state()
 {
 	local res=$(busctl call com.nokia.mce /com/nokia/mce/request com.nokia.mce.request get_charger_state)
 	# 's "on"' -> 'on'
-	res=${res//\"/}
+	res=$(printf '%s' "$res" | sed 's/"//g')
 	res=${res#s }
 	echo ${res:-unknown}
 }
